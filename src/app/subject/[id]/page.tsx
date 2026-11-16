@@ -16,6 +16,7 @@ import {
   Play,
   Upload,
   Plus,
+  Minus,
   Trash2,
   BookOpen,
   Layers,
@@ -377,23 +378,44 @@ export default function SubjectPage() {
       {/* Add Unit Modal */}
       {isAddUnitOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="w-full max-w-sm rounded-card border border-border-subtle bg-surface p-5 shadow-card">
-            <h3 className="text-sm font-bold text-foreground mb-3">Add New Unit</h3>
-            <form onSubmit={handleAddUnit} className="space-y-3">
+          <div className="w-full max-w-sm rounded-card border border-border-subtle bg-surface p-5 sm:p-6 shadow-card space-y-4">
+            <h3 className="text-base font-bold text-foreground">Add New Unit</h3>
+            <form onSubmit={handleAddUnit} className="space-y-4">
               <div>
-                <label className="text-xs font-mono text-foreground-muted block mb-1">
+                <label className="text-xs font-mono text-foreground-muted block mb-1.5">
                   Unit Number:
                 </label>
-                <input
-                  type="number"
-                  min={0}
-                  value={newUnitNumber}
-                  onChange={(e) => setNewUnitNumber(parseInt(e.target.value, 10) || 1)}
-                  className="w-full rounded-btn border border-border-subtle bg-black px-3 py-1.5 text-xs font-mono text-foreground"
-                />
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewUnitNumber((prev) => Math.max(0, prev - 1))}
+                    disabled={newUnitNumber <= 0}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 active:scale-95 disabled:opacity-30 disabled:pointer-events-none text-foreground transition-all"
+                    aria-label="Decrease unit number"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+
+                  <div className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] rounded-btn border border-border-subtle bg-black px-3 select-none">
+                    <span className="font-mono text-sm font-bold text-foreground">
+                      {newUnitNumber === 0 ? "0 (Unsorted)" : `Unit ${newUnitNumber}`}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setNewUnitNumber((prev) => Math.min(30, prev + 1))}
+                    disabled={newUnitNumber >= 30}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 active:scale-95 disabled:opacity-30 disabled:pointer-events-none text-foreground transition-all"
+                    aria-label="Increase unit number"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
+
               <div>
-                <label className="text-xs font-mono text-foreground-muted block mb-1">
+                <label className="text-xs font-mono text-foreground-muted block mb-1.5">
                   Unit Title:
                 </label>
                 <input
@@ -402,20 +424,21 @@ export default function SubjectPage() {
                   placeholder="e.g. Normalization & Decomposition"
                   value={newUnitTitle}
                   onChange={(e) => setNewUnitTitle(e.target.value)}
-                  className="w-full rounded-btn border border-border-subtle bg-black px-3 py-1.5 text-xs text-foreground"
+                  className="w-full rounded-btn border border-border-subtle bg-black px-3.5 py-2.5 min-h-[44px] text-base sm:text-xs text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none"
                 />
               </div>
-              <div className="flex items-center justify-end gap-2 pt-2">
+
+              <div className="flex items-center justify-end gap-2.5 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsAddUnitOpen(false)}
-                  className="px-3 py-1 text-xs text-foreground-secondary hover:text-foreground"
+                  className="px-4 py-2.5 min-h-[44px] text-xs font-medium text-foreground-secondary hover:text-foreground rounded-btn hover:bg-white/5 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 rounded-btn bg-white text-black text-xs font-semibold hover:bg-neutral-200"
+                  className="px-5 py-2.5 min-h-[44px] rounded-btn bg-white text-black text-xs font-bold hover:bg-neutral-200 active:scale-[0.98] transition-all shadow-sm"
                 >
                   Create Unit
                 </button>

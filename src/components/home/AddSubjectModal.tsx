@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, BookOpen, Layers } from "lucide-react";
+import { X, Plus, Minus, BookOpen, Layers } from "lucide-react";
 import { db } from "@/lib/db";
 import { generateId } from "@/lib/utils";
 import { Subject, Unit } from "@/types";
@@ -125,17 +125,62 @@ export default function AddSubjectModal({
             </div>
 
             <div>
-              <label className="text-xs font-medium text-foreground-secondary block mb-1.5">
-                Initial Units Count
-              </label>
-              <input
-                type="number"
-                min={1}
-                max={12}
-                value={unitCount}
-                onChange={(e) => setUnitCount(parseInt(e.target.value, 10) || 1)}
-                className="w-full rounded-btn border border-border-subtle bg-black px-3.5 py-2.5 min-h-[44px] text-base sm:text-xs font-mono text-foreground focus:border-border-focus focus:outline-none"
-              />
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-medium text-foreground-secondary">
+                  Initial Units Count
+                </label>
+                <span className="text-[11px] font-mono text-foreground-muted">
+                  {unitCount} {unitCount === 1 ? "unit" : "units"} will be created
+                </span>
+              </div>
+
+              {/* Mobile-Friendly Stepper Counter */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setUnitCount((prev) => Math.max(1, prev - 1))}
+                  disabled={unitCount <= 1}
+                  className="flex h-11 w-12 shrink-0 items-center justify-center rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 active:scale-95 disabled:opacity-30 disabled:pointer-events-none text-foreground transition-all"
+                  aria-label="Decrease units"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+
+                <div className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] rounded-btn border border-border-subtle bg-black px-3 select-none">
+                  <span className="font-mono text-lg font-bold text-foreground">{unitCount}</span>
+                  <span className="text-xs font-mono text-foreground-muted">
+                    {unitCount === 1 ? "Unit" : "Units"}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setUnitCount((prev) => Math.min(16, prev + 1))}
+                  disabled={unitCount >= 16}
+                  className="flex h-11 w-12 shrink-0 items-center justify-center rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 active:scale-95 disabled:opacity-30 disabled:pointer-events-none text-foreground transition-all"
+                  aria-label="Increase units"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Quick Preset Pills for 1-Tap Mobile Selection */}
+              <div className="flex items-center gap-1.5 pt-2 overflow-x-auto pb-1 no-scrollbar">
+                {[1, 2, 3, 4, 5, 6, 8].map((count) => (
+                  <button
+                    key={count}
+                    type="button"
+                    onClick={() => setUnitCount(count)}
+                    className={`px-3 py-1.5 min-h-[36px] rounded-btn text-xs font-mono transition-all active:scale-95 shrink-0 ${
+                      unitCount === count
+                        ? "bg-white text-black font-bold shadow-sm"
+                        : "bg-white/5 border border-border-subtle hover:bg-white/10 text-foreground-secondary hover:text-foreground"
+                    }`}
+                  >
+                    {count} {count === 1 ? "Unit" : "Units"}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div>
