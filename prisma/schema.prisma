@@ -1,5 +1,5 @@
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -39,8 +39,8 @@ model Question {
   id          String   @id @default(cuid())
   subjectId   String
   unitId      String
-  question    String
-  answer      String
+  question    String   @db.Text
+  answer      String   @db.Text
   marks       Int?
   years       String   @default("[]")
   exams       String   @default("[]")
