@@ -83,7 +83,7 @@ export default function HomePage() {
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 text-xs sm:text-sm font-semibold text-foreground hover:border-border-hover active:scale-[0.98] transition-all"
             >
               <Sparkles className="h-4 w-4 text-accent-blue" />
-              {isSeeding ? "Loading Demo..." : "Load Demo Subject (DBMS CS301)"}
+              {isSeeding ? "Loading Demo..." : "Load Demo Subject (DBMS)"}
             </button>
           </div>
         </div>

@@ -35,11 +35,6 @@ export default function SubjectCard({
         {/* Subject Info */}
         <div className="space-y-2 flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            {subject.code && (
-              <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-white/5 border border-border-subtle text-accent-blue">
-                {subject.code}
-              </span>
-            )}
             <span className="text-xs text-foreground-muted font-mono">
               {units.length} {units.length === 1 ? "unit" : "units"}
             </span>

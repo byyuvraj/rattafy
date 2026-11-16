@@ -19,7 +19,6 @@ export default function AddSubjectModal({
   onSubjectAdded,
 }: AddSubjectModalProps) {
   const [name, setName] = useState("");
-  const [code, setCode] = useState("");
   const [syllabus, setSyllabus] = useState("");
   const [unitCount, setUnitCount] = useState(4);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,7 +35,6 @@ export default function AddSubjectModal({
       const newSubject: Subject = {
         id: subjectId,
         name: name.trim(),
-        code: code.trim() || undefined,
         createdAt: now,
         syllabus: syllabus.trim() || undefined,
       };
@@ -60,7 +58,6 @@ export default function AddSubjectModal({
       });
 
       setName("");
-      setCode("");
       setSyllabus("");
       onClose();
       onSubjectAdded?.(subjectId);
@@ -121,33 +118,18 @@ export default function AddSubjectModal({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-medium text-foreground-secondary block mb-1.5">
-                  Subject Code
-                </label>
-                <input
-                  type="text"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="e.g. CS401"
-                  className="w-full rounded-btn border border-border-subtle bg-black px-3.5 py-2 text-xs font-mono text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-medium text-foreground-secondary block mb-1.5">
-                  Initial Units Count
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={12}
-                  value={unitCount}
-                  onChange={(e) => setUnitCount(parseInt(e.target.value, 10) || 1)}
-                  className="w-full rounded-btn border border-border-subtle bg-black px-3.5 py-2 text-xs font-mono text-foreground focus:border-border-focus focus:outline-none"
-                />
-              </div>
+            <div>
+              <label className="text-xs font-medium text-foreground-secondary block mb-1.5">
+                Initial Units Count
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={12}
+                value={unitCount}
+                onChange={(e) => setUnitCount(parseInt(e.target.value, 10) || 1)}
+                className="w-full rounded-btn border border-border-subtle bg-black px-3.5 py-2 text-xs font-mono text-foreground focus:border-border-focus focus:outline-none"
+              />
             </div>
 
             <div>

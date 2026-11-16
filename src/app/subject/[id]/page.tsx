@@ -168,11 +168,6 @@ export default function SubjectPage() {
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
               <div className="space-y-2 max-w-2xl">
                 <div className="flex items-center gap-2">
-                  {subject.code && (
-                    <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-white/5 border border-border-subtle text-accent-blue">
-                      {subject.code}
-                    </span>
-                  )}
                   <span className="text-xs text-foreground-muted font-mono">
                     {subjectUnits.length} Units
                   </span>

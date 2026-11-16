@@ -234,7 +234,7 @@ export default function StudyView({
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-xs text-foreground-muted font-mono truncate">
-                {subject.code || subject.name}
+                {subject.name}
               </span>
               <span className="text-xs text-foreground-muted">•</span>
               <h1 className="text-sm font-semibold text-foreground truncate">

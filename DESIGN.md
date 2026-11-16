@@ -108,7 +108,6 @@
 export interface Subject {
   id: string;               // UUID v4
   name: string;             // e.g. "Database Management Systems"
-  code?: string;            // e.g. "CS301"
   createdAt: number;        // Epoch timestamp (ms)
   syllabus?: string;        // Optional user syllabus list for AI unit mapping
 }

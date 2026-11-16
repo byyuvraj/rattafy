@@ -21,7 +21,7 @@ export const db = new RattafyDatabase();
 
 // Seed Demo Subject (DBMS)
 export async function seedDemoData(): Promise<string> {
-  const existing = await db.subjects.filter(s => s.name === "Database Management Systems (CS301)").first();
+  const existing = await db.subjects.filter(s => s.name === "Database Management Systems").first();
   if (existing) {
     return existing.id;
   }
@@ -31,8 +31,7 @@ export async function seedDemoData(): Promise<string> {
 
   const subject: Subject = {
     id: subjectId,
-    name: "Database Management Systems (CS301)",
-    code: "CS301",
+    name: "Database Management Systems",
     createdAt: now,
     syllabus: `Unit 1: Introduction & Relational Model (DBMS architecture, data independence, ER diagrams, keys)
 Unit 2: SQL & Relational Algebra (Queries, joins, nested subqueries, views, relational operators)
