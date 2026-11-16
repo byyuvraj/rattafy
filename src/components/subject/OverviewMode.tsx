@@ -83,7 +83,7 @@ export default function OverviewMode({
     if (confirmed) {
       try {
         await fetch(`/api/questions/${q.id}`, { method: "DELETE" });
-      } catch {}
+      } catch { }
       onQuestionsUpdated?.();
     }
   };
@@ -144,11 +144,10 @@ export default function OverviewMode({
               key={pill.id}
               type="button"
               onClick={() => setStatusFilter(pill.id)}
-              className={`px-3.5 py-2 min-h-[38px] flex items-center rounded-btn text-xs font-mono transition-colors shrink-0 ${
-                statusFilter === pill.id
-                  ? "bg-white text-black font-semibold"
-                  : "bg-surface border border-border-subtle text-foreground-secondary hover:text-foreground hover:bg-white/5"
-              }`}
+              className={`px-3.5 py-2 min-h-[38px] flex items-center rounded-btn text-xs font-mono transition-colors shrink-0 ${statusFilter === pill.id
+                ? "bg-white text-black font-semibold"
+                : "bg-surface border border-border-subtle text-foreground-secondary hover:text-foreground hover:bg-white/5"
+                }`}
             >
               {pill.label}
             </button>
@@ -192,13 +191,12 @@ export default function OverviewMode({
                     <div className="space-y-1.5 flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span
-                          className={`font-mono text-[10px] px-2 py-0.2 rounded-full uppercase tracking-wider font-semibold border ${
-                            q.status === "known"
-                              ? "bg-accent-green/10 text-accent-green border-accent-green/30"
-                              : q.status === "learning"
+                          className={`font-mono text-[10px] px-2 py-0.2 rounded-full uppercase tracking-wider font-semibold border ${q.status === "known"
+                            ? "bg-accent-green/10 text-accent-green border-accent-green/30"
+                            : q.status === "learning"
                               ? "bg-accent-amber/10 text-accent-amber border-accent-amber/30"
                               : "bg-white/5 text-foreground-secondary border-border-subtle"
-                          }`}
+                            }`}
                         >
                           {q.status}
                         </span>
@@ -231,9 +229,8 @@ export default function OverviewMode({
                       type="button"
                       onClick={() => handleToggleStar(q)}
                       title="Star"
-                      className={`p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-btn hover:bg-white/5 transition-colors ${
-                        q.starred ? "text-amber-400" : "text-foreground-muted"
-                      }`}
+                      className={`p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-btn hover:bg-white/5 transition-colors ${q.starred ? "text-amber-400" : "text-foreground-muted"
+                        }`}
                     >
                       <Star className={`h-4 w-4 ${q.starred ? "fill-amber-400" : ""}`} />
                     </button>
@@ -261,33 +258,30 @@ export default function OverviewMode({
                         <button
                           type="button"
                           onClick={() => handleSetStatus(q, "new")}
-                          className={`px-3 py-1.5 min-h-[36px] flex items-center justify-center rounded-btn font-mono text-xs ${
-                            q.status === "new"
-                              ? "bg-white text-black font-semibold"
-                              : "text-foreground-secondary hover:bg-white/5"
-                          }`}
+                          className={`px-3 py-1.5 min-h-[36px] flex items-center justify-center rounded-btn font-mono text-xs ${q.status === "new"
+                            ? "bg-white text-black font-semibold"
+                            : "text-foreground-secondary hover:bg-white/5"
+                            }`}
                         >
                           New
                         </button>
                         <button
                           type="button"
                           onClick={() => handleSetStatus(q, "learning")}
-                          className={`px-3 py-1.5 min-h-[36px] flex items-center justify-center rounded-btn font-mono text-xs ${
-                            q.status === "learning"
-                              ? "bg-amber-400 text-black font-semibold"
-                              : "text-amber-400 hover:bg-amber-400/10"
-                          }`}
+                          className={`px-3 py-1.5 min-h-[36px] flex items-center justify-center rounded-btn font-mono text-xs ${q.status === "learning"
+                            ? "bg-amber-400 text-black font-semibold"
+                            : "text-amber-400 hover:bg-amber-400/10"
+                            }`}
                         >
                           Revise
                         </button>
                         <button
                           type="button"
                           onClick={() => handleSetStatus(q, "known")}
-                          className={`px-3 py-1.5 min-h-[36px] flex items-center justify-center rounded-btn font-mono text-xs ${
-                            q.status === "known"
-                              ? "bg-emerald-400 text-black font-semibold"
-                              : "text-emerald-400 hover:bg-emerald-400/10"
-                          }`}
+                          className={`px-3 py-1.5 min-h-[36px] flex items-center justify-center rounded-btn font-mono text-xs ${q.status === "known"
+                            ? "bg-emerald-400 text-black font-semibold"
+                            : "text-emerald-400 hover:bg-emerald-400/10"
+                            }`}
                         >
                           Known
                         </button>
