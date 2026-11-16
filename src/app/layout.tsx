@@ -7,7 +7,7 @@ import SmoothScroll from "@/components/layout/SmoothScroll";
 import OnboardingModal from "@/components/onboarding/OnboardingModal";
 
 export const metadata: Metadata = {
-  title: "Rattafy — Visual Exam-Prep & Flashcard Study Environment",
+  title: "Rattafy - Visual Exam-Prep & Flashcard Study Environment",
   description:
     "Turn giant Word docs and past papers into structured, unit-wise swipeable cards. Built for high-retention university exam mastery.",
   applicationName: "Rattafy",
