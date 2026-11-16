@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Question, Unit, Subject } from "@/types";
 import { db } from "@/lib/db";
+import { getStudySessionPosition, setStudySessionPosition } from "@/lib/storage";
 import SwipeCard from "./SwipeCard";
 import confetti from "canvas-confetti";
 import {
@@ -48,6 +49,23 @@ export default function StudyView({
   // Notes Modal state
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [currentNoteText, setCurrentNoteText] = useState("");
+
+  const deckKey = unit ? `${subject.id}_${unit.id}` : `${subject.id}_all`;
+
+  // Restore cached study position on mount
+  useEffect(() => {
+    const saved = getStudySessionPosition(deckKey);
+    if (saved > 0 && saved < initialQuestions.length) {
+      setCurrentIndex(saved);
+    }
+  }, [deckKey, initialQuestions.length]);
+
+  // Save current card position to cache as user studies
+  useEffect(() => {
+    if (currentIndex >= 0) {
+      setStudySessionPosition(deckKey, currentIndex);
+    }
+  }, [deckKey, currentIndex]);
 
   // Sync questions if props update
   useEffect(() => {

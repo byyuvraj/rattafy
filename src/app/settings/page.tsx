@@ -14,6 +14,8 @@ import {
   Check,
   Loader2,
   Cpu,
+  Database,
+  Shield,
 } from "lucide-react";
 import {
   getApiKey,
@@ -22,6 +24,8 @@ import {
   getSelectedModel,
   setSelectedModel,
   AVAILABLE_MODELS,
+  getStorageStats,
+  ensureStoragePersistence,
 } from "@/lib/storage";
 import { validateGeminiApiKey } from "@/lib/gemini";
 import { exportAllData, importAllData, clearAllData } from "@/lib/db";
@@ -38,12 +42,32 @@ export default function SettingsPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importStatus, setImportStatus] = useState<string | null>(null);
+  const [storageInfo, setStorageInfo] = useState<{
+    usageKB: number;
+    quotaMB: number;
+    isPersisted: boolean;
+  } | null>(null);
+  const [isRequestingPersistence, setIsRequestingPersistence] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setApiKeyInput(getApiKey());
     setModelInput(getSelectedModel());
+
+    getStorageStats().then(setStorageInfo);
+    // Request persistent storage on load automatically
+    ensureStoragePersistence().then(() => {
+      getStorageStats().then(setStorageInfo);
+    });
   }, []);
+
+  const handleRequestPersistence = async () => {
+    setIsRequestingPersistence(true);
+    await ensureStoragePersistence();
+    const updated = await getStorageStats();
+    setStorageInfo(updated);
+    setIsRequestingPersistence(false);
+  };
 
   const handleTestAndSaveKey = async () => {
     if (!apiKeyInput.trim()) {
@@ -293,6 +317,86 @@ export default function SettingsPage() {
           <p className="text-[11px] text-foreground-muted">
             <code className="text-accent-blue font-mono">gemini-2.5-flash</code> is recommended for high-speed multimodal paper OCR and structured JSON responses.
           </p>
+        </div>
+      </div>
+
+      {/* Offline Storage Cache & Persistence Section */}
+      <div className="rounded-card border border-border-subtle bg-surface p-6 sm:p-7 space-y-5">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-btn bg-white/5 border border-border-subtle text-accent-blue">
+              <Database className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-foreground">Offline Storage & Cache Persistence</h2>
+              <p className="text-xs text-foreground-muted">
+                Your subjects, units, questions, and drafts remain permanently saved in your browser.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span
+              className={`font-mono text-xs px-2.5 py-1 rounded-full border inline-flex items-center gap-1.5 ${
+                storageInfo?.isPersisted
+                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                  : "bg-white/5 border-border-subtle text-foreground-muted"
+              }`}
+            >
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  storageInfo?.isPersisted ? "bg-emerald-400 shadow-[0_0_8px_#22c55e]" : "bg-neutral-500"
+                }`}
+              />
+              {storageInfo?.isPersisted ? "Storage Protected (Won't be Evicted)" : "Standard Cache"}
+            </span>
+          </div>
+        </div>
+
+        {/* Feature bullets */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+          <div className="p-3.5 rounded-btn bg-surface-elevated border border-border-subtle space-y-1">
+            <span className="text-[11px] font-mono text-foreground-muted uppercase">IndexedDB Engine</span>
+            <p className="text-xs font-semibold text-foreground">Dexie Reactive Storage</p>
+            <p className="text-[11px] text-foreground-muted">
+              Fast, zero-server database holding all your past-paper cards offline.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-btn bg-surface-elevated border border-border-subtle space-y-1">
+            <span className="text-[11px] font-mono text-foreground-muted uppercase">Import Auto-Draft</span>
+            <p className="text-xs font-semibold text-foreground">Instant Recovery</p>
+            <p className="text-[11px] text-foreground-muted">
+              Pasted past-paper text is automatically cached continuously so you never lose your work.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-btn bg-surface-elevated border border-border-subtle space-y-1">
+            <span className="text-[11px] font-mono text-foreground-muted uppercase">Deck Resume Cache</span>
+            <p className="text-xs font-semibold text-foreground">Position Remembered</p>
+            <p className="text-[11px] text-foreground-muted">
+              Remembers your exact card index so you resume directly where you left off.
+            </p>
+          </div>
+        </div>
+
+        {/* Action / Protection button */}
+        <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-border-subtle">
+          <div className="text-xs text-foreground-muted font-mono">
+            Approx. {storageInfo?.usageKB || 0} KB currently cached on this device.
+          </div>
+
+          {!storageInfo?.isPersisted && (
+            <button
+              type="button"
+              disabled={isRequestingPersistence}
+              onClick={handleRequestPersistence}
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 min-h-[44px] rounded-btn bg-white/10 hover:bg-white/20 border border-white/10 text-xs font-semibold text-foreground transition-all"
+            >
+              <Shield className="h-3.5 w-3.5" />
+              {isRequestingPersistence ? "Protecting Storage..." : "Lock Storage Against Eviction"}
+            </button>
+          )}
         </div>
       </div>
 

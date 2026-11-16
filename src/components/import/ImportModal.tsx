@@ -17,7 +17,13 @@ import {
 } from "lucide-react";
 import { parsePastPaperText } from "@/lib/parser";
 import { extractQuestionsFromMedia, fileToBase64 } from "@/lib/gemini";
-import { getApiKey, getSelectedModel } from "@/lib/storage";
+import {
+  getApiKey,
+  getSelectedModel,
+  getImportDraft,
+  setImportDraft,
+  clearImportDraft,
+} from "@/lib/storage";
 import { db } from "@/lib/db";
 import { generateId } from "@/lib/utils";
 import { Subject, Unit, ParsedUnitGroup, ParsedQuestion } from "@/types";
@@ -42,6 +48,7 @@ export default function ImportModal({
 
   // Mode A: Text State
   const [pastedText, setPastedText] = useState("");
+  const [isDraftRestored, setIsDraftRestored] = useState(false);
   const [liveStats, setLiveStats] = useState<{ totalQuestions: number; unitCount: number } | null>(null);
 
   // Mode B: Scan State
@@ -64,25 +71,42 @@ export default function ImportModal({
 
   useEffect(() => {
     setHasApiKey(Boolean(getApiKey()));
-  }, [isOpen]);
 
-  // Live preview counter for text mode
-  useEffect(() => {
-    if (activeTab === "text" && pastedText.trim().length > 10) {
-      const res = parsePastPaperText(pastedText);
-      setLiveStats({
-        totalQuestions: res.totalQuestions,
-        unitCount: res.units.length,
-      });
-    } else {
-      setLiveStats(null);
+    if (isOpen) {
+      const cached = getImportDraft(subject.id);
+      if (cached && cached.trim()) {
+        setPastedText(cached);
+        setIsDraftRestored(true);
+      }
     }
-  }, [pastedText, activeTab]);
+  }, [isOpen, subject.id]);
 
-  // Reset when closing
+  // Live preview counter for text mode & Auto-save to draft cache
+  useEffect(() => {
+    if (activeTab === "text") {
+      setImportDraft(subject.id, pastedText);
+
+      if (pastedText.trim().length > 10) {
+        const res = parsePastPaperText(pastedText);
+        setLiveStats({
+          totalQuestions: res.totalQuestions,
+          unitCount: res.units.length,
+        });
+      } else {
+        setLiveStats(null);
+      }
+    }
+  }, [pastedText, activeTab, subject.id]);
+
+  const handleClearDraft = () => {
+    setPastedText("");
+    clearImportDraft(subject.id);
+    setIsDraftRestored(false);
+  };
+
+  // Reset when closing (keeps draft in storage for safety)
   const handleClose = () => {
     setParsedGroups(null);
-    setPastedText("");
     setSelectedFiles([]);
     setScanProgress(null);
     onClose();
@@ -282,6 +306,8 @@ export default function ImportModal({
         }
       });
 
+      clearImportDraft(subject.id);
+      setPastedText("");
       handleClose();
       onImportComplete?.();
     } catch (err: any) {
@@ -407,7 +433,7 @@ export default function ImportModal({
                         )}
                       </div>
 
-                      <div>
+                      <div className="flex items-center gap-2">
                         <input
                           ref={fileInputRef}
                           type="file"
@@ -425,6 +451,22 @@ export default function ImportModal({
                         </button>
                       </div>
                     </div>
+
+                    {pastedText.trim().length > 0 && (
+                      <div className="flex items-center justify-between text-[11px] px-1 py-1 rounded bg-white/[0.02] border border-border-subtle/60">
+                        <span className="inline-flex items-center gap-1.5 text-emerald-400 font-mono">
+                          <CheckCircle2 className="h-3 w-3" />
+                          Draft auto-saved to browser cache
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleClearDraft}
+                          className="text-foreground-muted hover:text-red-400 hover:underline px-2 py-0.5 text-xs"
+                        >
+                          Clear draft
+                        </button>
+                      </div>
+                    )}
 
                     <textarea
                       rows={10}
