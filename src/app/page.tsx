@@ -8,7 +8,6 @@ import AddSubjectModal from "@/components/home/AddSubjectModal";
 import {
   Plus,
   Layers,
-  Flame,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -23,7 +22,6 @@ export default function HomePage() {
 
   const totalQuestionsCount = allQuestions ? allQuestions.length : 0;
   const knownQuestionsCount = allQuestions ? allQuestions.filter((q) => q.status === "known").length : 0;
-  const repeatedQuestionsCount = allQuestions ? allQuestions.filter((q) => q.repeatCount > 1).length : 0;
   const overallKnownPercent =
     totalQuestionsCount > 0 ? Math.round((knownQuestionsCount / totalQuestionsCount) * 100) : 0;
 
@@ -60,7 +58,7 @@ export default function HomePage() {
 
         {/* Aggregate Stats Strip */}
         {subjects && subjects.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-10">
             <div className="p-4 rounded-card bg-surface border border-border-subtle">
               <span className="text-xs text-foreground-muted font-mono block mb-1">Subjects</span>
               <span className="text-2xl font-bold text-foreground font-mono">{subjects.length}</span>
@@ -74,13 +72,6 @@ export default function HomePage() {
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-bold text-accent-green font-mono">{overallKnownPercent}%</span>
                 <span className="text-xs text-foreground-muted font-mono">({knownQuestionsCount})</span>
-              </div>
-            </div>
-            <div className="p-4 rounded-card bg-surface border border-border-subtle">
-              <span className="text-xs text-foreground-muted font-mono block mb-1">Repeated in Exams</span>
-              <div className="flex items-baseline gap-1 text-accent-blue">
-                <Flame className="h-4 w-4" />
-                <span className="text-2xl font-bold font-mono">{repeatedQuestionsCount}</span>
               </div>
             </div>
           </div>

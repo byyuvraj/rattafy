@@ -1,7 +1,7 @@
 "use client";
 
 import { Unit, Question } from "@/types";
-import { Play, List, Flame, Star, Award, CheckCircle2 } from "lucide-react";
+import { Play, List, Star, Award, CheckCircle2 } from "lucide-react";
 import { formatPercent } from "@/lib/utils";
 
 interface UnitCardProps {
@@ -20,7 +20,6 @@ export default function UnitCard({
   const total = questions.length;
   const known = questions.filter((q) => q.status === "known").length;
   const percent = formatPercent(known, total);
-  const repeated = questions.filter((q) => q.repeatCount > 1).length;
   const starred = questions.filter((q) => q.starred).length;
 
   return (
@@ -33,12 +32,6 @@ export default function UnitCard({
           </span>
 
           <div className="flex items-center gap-2">
-            {repeated > 0 && (
-              <span className="inline-flex items-center gap-1 font-mono text-[11px] px-2 py-0.5 rounded-full bg-accent-blue/10 text-accent-blue border border-accent-blue/20">
-                <Flame className="h-3 w-3" />
-                {repeated} Repeated
-              </span>
-            )}
             {starred > 0 && (
               <span className="inline-flex items-center gap-1 font-mono text-[11px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
                 <Star className="h-3 w-3 fill-amber-300" />

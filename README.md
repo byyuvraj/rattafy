@@ -21,11 +21,10 @@ Rattafy takes past-paper and Mid Semester Test (MST) question-answer documents, 
   - Multimodal extraction into strict JSON schemas.
   - Auto-assigns unsorted questions to syllabus units.
   - Generates exam-grade AI answers when only questions exist on the paper.
-  - Detects duplicate questions across exam years and displays **Repeated ×N** priority badges.
 - **Touch & Keyboard Driven Active Recall**:
   - Swipe cards (Left/Right to navigate, Up for Known, Down for Revise).
   - Space / Enter to flip, K for Known, R for Revise, S for Star, N for personal notes.
-  - Filters by Unknown only, Starred, Repeated questions, or Marks weightage.
+  - Filters by Unknown only, Starred, or Marks weightage.
   - Markdown, tables, and highlighted syntax code blocks.
 
 ---

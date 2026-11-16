@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { Question } from "@/types";
 import {
-  Flame,
   Clock,
   Award,
   Star,
@@ -187,11 +186,6 @@ export default function SwipeCard({
                 {nextQuestionPreview.marks} Marks
               </span>
             )}
-            {nextQuestionPreview.repeatCount > 1 && (
-              <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-accent-blue/10 text-accent-blue">
-                Repeated ×{nextQuestionPreview.repeatCount}
-              </span>
-            )}
           </div>
           <p className="text-sm font-medium text-neutral-400 line-clamp-3">
             {nextQuestionPreview.question}
@@ -263,13 +257,6 @@ export default function SwipeCard({
                 <span className="inline-flex items-center gap-1 font-mono text-[11px] px-2 py-0.5 rounded bg-white/[0.04] border border-border-subtle text-foreground-secondary">
                   <Award className="h-3 w-3 text-accent-blue" />
                   {question.marks} Marks
-                </span>
-              )}
-
-              {question.repeatCount > 1 && (
-                <span className="inline-flex items-center gap-1 font-mono text-[11px] px-2 py-0.5 rounded-full bg-accent-blue/15 text-accent-blue border border-accent-blue/30 font-semibold animate-pulse-subtle">
-                  <Flame className="h-3 w-3" />
-                  Repeated ×{question.repeatCount}
                 </span>
               )}
 

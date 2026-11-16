@@ -10,7 +10,6 @@ import {
   ChevronDown,
   ChevronRight,
   Sparkles,
-  Flame,
   Clock,
   Award,
   Trash2,
@@ -506,12 +505,6 @@ export default function ImportPreview({
                                   <span className="inline-flex items-center gap-1 font-mono text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-border-subtle text-foreground-secondary">
                                     <Clock className="h-3 w-3" />
                                     {q.years.join(", ")}
-                                  </span>
-                                )}
-                                {q.repeatCount > 1 && (
-                                  <span className="inline-flex items-center gap-1 font-mono text-[10px] px-1.5 py-0.5 rounded-full bg-accent-blue/10 text-accent-blue border border-accent-blue/20 font-semibold">
-                                    <Flame className="h-3 w-3" />
-                                    Repeated ×{q.repeatCount}
                                   </span>
                                 )}
                                 {q.aiGenerated && (

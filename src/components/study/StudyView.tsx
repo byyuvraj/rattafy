@@ -9,12 +9,10 @@ import SwipeCard from "./SwipeCard";
 import confetti from "canvas-confetti";
 import {
   X,
-  Shuffle,
   ChevronLeft,
   ChevronRight,
   Filter,
   Star,
-  Flame,
   CheckCircle2,
   StickyNote,
   Sparkles,
@@ -40,9 +38,8 @@ export default function StudyView({
   const [questions, setQuestions] = useState<Question[]>(initialQuestions);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [isShuffled, setIsShuffled] = useState(false);
 
-  // Filters: 'all' | 'unknown' | 'starred' | 'repeated' | 'marks'
+  // Filters: 'all' | 'unknown' | 'starred' | 'marks'
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [marksFilter, setMarksFilter] = useState<number | null>(null);
 
@@ -80,29 +77,12 @@ export default function StudyView({
       list = list.filter((q) => q.status !== "known");
     } else if (activeFilter === "starred") {
       list = list.filter((q) => q.starred);
-    } else if (activeFilter === "repeated") {
-      list = list.filter((q) => q.repeatCount > 1);
     } else if (activeFilter === "marks" && marksFilter !== null) {
       list = list.filter((q) => q.marks === marksFilter);
     }
 
     return list;
   }, [questions, activeFilter, marksFilter]);
-
-  // Shuffle handler
-  const handleToggleShuffle = () => {
-    setIsShuffled((prev) => {
-      const next = !prev;
-      if (next) {
-        setQuestions((current) => [...current].sort(() => Math.random() - 0.5));
-      } else {
-        setQuestions(initialQuestions);
-      }
-      setCurrentIndex(0);
-      setIsFlipped(false);
-      return next;
-    });
-  };
 
   const activeQuestion = filteredQuestions[currentIndex];
   const nextQuestion = filteredQuestions[currentIndex + 1];
@@ -368,35 +348,7 @@ export default function StudyView({
             Starred ({questions.filter((q) => q.starred).length})
           </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setActiveFilter("repeated");
-              setCurrentIndex(0);
-            }}
-            className={`inline-flex items-center gap-1 px-3 py-1.5 min-h-[38px] rounded-btn text-xs font-mono transition-colors shrink-0 ${activeFilter === "repeated"
-              ? "bg-white text-black font-semibold"
-              : "text-foreground-secondary hover:text-foreground hover:bg-white/5"
-              }`}
-          >
-            <Flame className="h-3 w-3 text-accent-blue" />
-            Repeated ({questions.filter((q) => q.repeatCount > 1).length})
-          </button>
         </div>
-
-        {/* Shuffle Button */}
-        <button
-          type="button"
-          onClick={handleToggleShuffle}
-          title="Toggle Shuffle"
-          className={`inline-flex items-center gap-1 px-3 py-1.5 min-h-[38px] rounded-btn text-xs font-mono transition-colors shrink-0 ${isShuffled
-            ? "bg-accent-blue/20 text-accent-blue border border-accent-blue/30"
-            : "text-foreground-muted hover:text-foreground hover:bg-white/5"
-            }`}
-        >
-          <Shuffle className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Shuffle</span>
-        </button>
       </div>
 
       {/* Main Study Deck Area */}

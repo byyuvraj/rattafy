@@ -20,7 +20,6 @@ import {
   Trash2,
   BookOpen,
   Layers,
-  Flame,
   Star,
   Settings2,
   ChevronRight,
@@ -74,7 +73,6 @@ export default function SubjectPage() {
   const totalQuestions = subjectQuestions.length;
   const knownCount = subjectQuestions.filter((q) => q.status === "known").length;
   const percentKnown = formatPercent(knownCount, totalQuestions);
-  const repeatedCount = subjectQuestions.filter((q) => q.repeatCount > 1).length;
   const starredCount = subjectQuestions.filter((q) => q.starred).length;
 
   // Add unit handler
@@ -182,8 +180,8 @@ export default function SubjectPage() {
                   {subject.name}
                 </h1>
                 <p className="text-xs sm:text-sm text-foreground-secondary leading-relaxed">
-                  Study unit-by-unit with swipeable past-paper cards. Repeated exam questions are
-                  automatically badged for high priority.
+                  Study unit-by-unit with swipeable past-paper cards. Track mastery, revise difficult topics,
+                  and star high-priority questions.
                 </p>
               </div>
 
@@ -232,7 +230,7 @@ export default function SubjectPage() {
             </div>
 
             {/* Quick Metrics Bar */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-border-subtle/80">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-border-subtle/80">
               <div className="space-y-1">
                 <span className="text-[11px] font-mono text-foreground-muted uppercase">
                   Total Questions
@@ -249,16 +247,6 @@ export default function SubjectPage() {
                   <span className="text-[11px] font-mono text-foreground-muted">
                     ({knownCount} known)
                   </span>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <span className="text-[11px] font-mono text-foreground-muted uppercase">
-                  Repeated In Exams
-                </span>
-                <div className="flex items-baseline gap-1 text-accent-blue">
-                  <Flame className="h-4 w-4" />
-                  <p className="text-xl font-bold font-mono">{repeatedCount}</p>
                 </div>
               </div>
 

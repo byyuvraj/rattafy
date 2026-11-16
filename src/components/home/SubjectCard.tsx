@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Subject, Unit, Question } from "@/types";
-import { BookOpen, ChevronRight, Layers, Flame, Star } from "lucide-react";
+import { BookOpen, ChevronRight, Layers, Star } from "lucide-react";
 import { formatPercent } from "@/lib/utils";
 
 interface SubjectCardProps {
@@ -19,7 +19,6 @@ export default function SubjectCard({
   const total = questions.length;
   const known = questions.filter((q) => q.status === "known").length;
   const percent = formatPercent(known, total);
-  const repeated = questions.filter((q) => q.repeatCount > 1).length;
 
   // SVG Circular progress ring calculations
   const radius = 24;
@@ -84,16 +83,7 @@ export default function SubjectCard({
       </div>
 
       {/* Bottom info row */}
-      <div className="mt-5 pt-4 border-t border-border-subtle flex items-center justify-between text-xs text-foreground-muted">
-        <div className="flex items-center gap-3">
-          {repeated > 0 && (
-            <span className="inline-flex items-center gap-1 font-mono text-[11px] text-accent-blue">
-              <Flame className="h-3 w-3" />
-              {repeated} Repeated
-            </span>
-          )}
-        </div>
-
+      <div className="mt-5 pt-4 border-t border-border-subtle flex items-center justify-end text-xs text-foreground-muted">
         <div className="inline-flex items-center gap-1 text-foreground-secondary group-hover:text-foreground font-medium transition-colors">
           Open
           <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />

@@ -7,7 +7,6 @@ import {
   Search,
   ChevronDown,
   ChevronRight,
-  Flame,
   Star,
   Award,
   CheckCircle2,
@@ -51,7 +50,6 @@ export default function OverviewMode({
       if (statusFilter === "learning" && q.status !== "learning") return false;
       if (statusFilter === "new" && q.status !== "new") return false;
       if (statusFilter === "starred" && !q.starred) return false;
-      if (statusFilter === "repeated" && q.repeatCount <= 1) return false;
 
       // Search filter
       if (!searchQuery.trim()) return true;
@@ -139,7 +137,6 @@ export default function OverviewMode({
             { id: "learning", label: "Learning" },
             { id: "new", label: "New" },
             { id: "starred", label: "Starred" },
-            { id: "repeated", label: "Repeated" },
           ].map((pill) => (
             <button
               key={pill.id}
@@ -207,13 +204,6 @@ export default function OverviewMode({
                         {q.marks && (
                           <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-white/5 text-foreground-secondary border border-border-subtle">
                             {q.marks} Marks
-                          </span>
-                        )}
-
-                        {q.repeatCount > 1 && (
-                          <span className="inline-flex items-center gap-1 font-mono text-[10px] px-1.5 py-0.2 rounded-full bg-accent-blue/15 text-accent-blue border border-accent-blue/30 font-semibold">
-                            <Flame className="h-3 w-3" />
-                            Repeated ×{q.repeatCount}
                           </span>
                         )}
 

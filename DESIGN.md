@@ -9,7 +9,7 @@
 3. **Frictionless Input**:
    - **Mode A (Smart Text Import)**: Deterministic, offline-first parser supporting past-paper text/markdown with questions, metadata tags, and code blocks.
    - **Mode B (Gemini Multimodal Scanner)**: Direct OCR, structured extraction, syllabus unit matching, and duplicate question detection from paper scans, photos, and PDFs.
-4. **Active Recall & Exam Readiness**: Spaced tracking (`new`, `learning`, `known`), priority badges for repeated exam questions, keyboard-driven navigation, and fast overview search.
+4. **Active Recall & Exam Readiness**: Spaced tracking (`new`, `learning`, `known`), priority starring, keyboard-driven navigation, and fast overview search.
 
 ---
 
@@ -30,7 +30,7 @@
   - Secondary: `#a1a1a1`
   - Muted / Meta: `#737373`
 - **Accent Color**:
-  - Subtle electric / soft blue: `hsl(212, 100%, 65%)` (`#4da2ff`) used sparingly for highlights, links, and repeated badges.
+  - Subtle electric / soft blue: `hsl(212, 100%, 65%)` (`#4da2ff`) used sparingly for highlights, links, and accents.
   - Success (Known): `hsl(142, 70%, 55%)` (`#22c55e`)
   - Warning (Revise / Learning): `hsl(38, 92%, 50%)` (`#f59e0b`)
   - Starred: `hsl(48, 96%, 53%)` (`#eab308`)
@@ -40,7 +40,7 @@
 ### 2.2 Typography
 - **Primary Font**: Geist Sans (`font-sans`) for headings, body copy, and UI controls.
   - Headings: `font-semibold` / `font-bold` with tight letter spacing (`tracking-tight` / `tracking-tighter`).
-- **Monospace Font**: Geist Mono (`font-mono`) for marks, exam years, repeated badges, question IDs, and code blocks.
+- **Monospace Font**: Geist Mono (`font-mono`) for marks, exam years, question IDs, and code blocks.
 - **Font Sizes**:
   - Hero display: `text-3xl` / `text-4xl` / `text-5xl`
   - Card Question: `text-xl` to `text-2xl`
@@ -163,7 +163,7 @@ export interface Question {
 
 ### Screen 3: Subject Detail Page
 - Breadcrumb navigation (`Home > Database Management Systems`).
-- Quick stats: Total Questions, Known %, Starred Count, Repeated Questions Count.
+- Quick stats: Total Questions, Known %, Starred Count.
 - Large minimal unit cards:
   - Unit badge: `Unit 1`, `Unit 2`, etc.
   - Unit Title
@@ -181,12 +181,12 @@ export interface Question {
   - Exit button (`Esc` or `✕` icon) back to Subject view
   - Current unit title & active index (`Question 14 of 32`)
   - Animated progress bar
-  - Filter pills: `All`, `Unknown Only`, `Starred Only`, `Repeated (×2+)`, `By Marks`
+  - Filter pills: `All`, `Unknown Only`, `Starred Only`, `By Marks`
 - **Card Stack View**:
   - Top card rendered with Framer Motion drag gestures (horizontal swipe for Prev/Next, vertical swipe for Known/Revise).
   - Subtle preview/peek of next card positioned behind (`scale(0.96)`, slight vertical offset, lowered opacity).
   - **Card Front**:
-    - Metadata row: Marks badge (`[5 Marks]`), Year tags (`2022`, `2023`), Repeated badge (`🔥 Repeated ×3`).
+    - Metadata row: Marks badge (`[5 Marks]`), Year tags (`2022`, `2023`).
     - Question text in crisp, large typography.
     - Status badge (`New`, `Learning`, `Known`).
     - "Click or Press Space to Reveal Answer" hint.
@@ -211,7 +211,7 @@ export interface Question {
 ### Screen 5: Overview Mode (Search & Browse)
 - Accessible per Unit or Subject.
 - Search input (live filter by question text, answer, or tags).
-- Multi-filter toolbar (Status, Marks, Starred, Repeated).
+- Multi-filter toolbar (Status, Marks, Starred).
 - List / Grid card view showing expandable accordions for quick revision before exam hour.
 - Edit / Delete question inline actions.
 
