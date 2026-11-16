@@ -41,12 +41,9 @@ export default function SwipeCard({
   nextQuestionPreview,
 }: SwipeCardProps) {
   const x = useMotionValue(0);
-  const y = useMotionValue(0);
 
-  // Dynamic visual feedback during drag
-  const rotate = useTransform(x, [-200, 200], [-10, 10]);
-  const opacityKnown = useTransform(y, [-150, -30], [1, 0]);
-  const opacityRevise = useTransform(y, [30, 150], [0, 1]);
+  // Dynamic visual feedback during horizontal drag
+  const rotate = useTransform(x, [-200, 200], [-8, 8]);
   const opacityNext = useTransform(x, [-120, -20], [1, 0]);
   const opacityPrev = useTransform(x, [20, 120], [0, 1]);
 
@@ -57,58 +54,33 @@ export default function SwipeCard({
   // Reset motion values cleanly when question changes
   useEffect(() => {
     x.set(0);
-    y.set(0);
     isDraggingRef.current = false;
-  }, [question.id, x, y]);
+  }, [question.id, x]);
 
-  // Unified swipe evaluation for both Framer Motion drag and native touch events
-  const resolveSwipe = (
-    offsetX: number,
-    offsetY: number,
-    velocityX: number,
-    velocityY: number
-  ) => {
+  // Horizontal swipe evaluation strictly for navigating cards
+  const resolveHorizontalSwipe = (offsetX: number, velocityX: number) => {
     const now = Date.now();
-    // Enforce 450ms cooldown between swipes to eliminate any duplicate event triggers
-    if (now - lastSwipeTimeRef.current < 450) {
+    // Enforce 400ms cooldown between swipes
+    if (now - lastSwipeTimeRef.current < 400) {
       return;
     }
 
-    const absX = Math.abs(offsetX);
-    const absY = Math.abs(offsetY);
+    // Swiped Left -> Next Card
+    if (offsetX < -45 || (offsetX < -20 && velocityX < -250) || velocityX < -450) {
+      lastSwipeTimeRef.current = now;
+      onSwipeNext();
+      return;
+    }
 
-    // Dominant horizontal intent (card navigation)
-    if (absX >= absY) {
-      // Swiped Left -> Next Card
-      if (offsetX < -40 || (offsetX < -15 && velocityX < -200) || velocityX < -400) {
-        lastSwipeTimeRef.current = now;
-        onSwipeNext();
-        return;
-      }
-      // Swiped Right -> Previous Card
-      if (offsetX > 40 || (offsetX > 15 && velocityX > 200) || velocityX > 400) {
-        lastSwipeTimeRef.current = now;
-        onSwipePrev();
-        return;
-      }
-    } else {
-      // Dominant vertical intent (mark status)
-      // Swiped Up -> Mark Known
-      if (offsetY < -50 || (offsetY < -20 && velocityY < -200)) {
-        lastSwipeTimeRef.current = now;
-        onMarkKnown();
-        return;
-      }
-      // Swiped Down -> Revise Again
-      if (offsetY > 50 || (offsetY > 20 && velocityY > 200)) {
-        lastSwipeTimeRef.current = now;
-        onMarkRevise();
-        return;
-      }
+    // Swiped Right -> Previous Card
+    if (offsetX > 45 || (offsetX > 20 && velocityX > 250) || velocityX > 450) {
+      lastSwipeTimeRef.current = now;
+      onSwipePrev();
+      return;
     }
   };
 
-  // Native touch handlers to guarantee mobile gestures work 100% of the time
+  // Touch handlers to support horizontal swipe navigation while preserving natural vertical scroll
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length !== 1) return;
     touchStartRef.current = {
@@ -124,7 +96,12 @@ export default function SwipeCard({
     const deltaX = e.touches[0].clientX - touchStartRef.current.x;
     const deltaY = e.touches[0].clientY - touchStartRef.current.y;
 
-    if (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6) {
+    // If vertical movement is dominant, let the browser scroll the answer naturally
+    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      return;
+    }
+
+    if (Math.abs(deltaX) > 10) {
       isDraggingRef.current = true;
     }
   };
@@ -135,31 +112,36 @@ export default function SwipeCard({
     const deltaX = e.changedTouches[0].clientX - touchStartRef.current.x;
     const deltaY = e.changedTouches[0].clientY - touchStartRef.current.y;
     const elapsed = Math.max(1, Date.now() - touchStartRef.current.time);
-    const velocityX = (deltaX / elapsed) * 1000; // px/sec
-    const velocityY = (deltaY / elapsed) * 1000; // px/sec
+    const velocityX = (deltaX / elapsed) * 1000;
 
     touchStartRef.current = null;
 
-    if (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6) {
+    // If vertical scrolling was dominant, do not navigate
+    if (Math.abs(deltaY) > Math.abs(deltaX) * 1.2) {
+      isDraggingRef.current = false;
+      return;
+    }
+
+    if (Math.abs(deltaX) > 10) {
       setTimeout(() => {
         isDraggingRef.current = false;
       }, 120);
 
-      resolveSwipe(deltaX, deltaY, velocityX, velocityY);
+      resolveHorizontalSwipe(deltaX, velocityX);
     }
   };
 
-  // Framer Motion drag handlers
+  // Framer Motion drag handlers (horizontal only)
   const handleDragStart = () => {
     isDraggingRef.current = true;
   };
 
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     setTimeout(() => {
       isDraggingRef.current = false;
     }, 120);
 
-    resolveSwipe(info.offset.x, info.offset.y, info.velocity.x, info.velocity.y);
+    resolveHorizontalSwipe(info.offset.x, info.velocity.x);
   };
 
   // Guard click-to-flip against drag/swipe releases
@@ -194,42 +176,28 @@ export default function SwipeCard({
 
       {/* Main Interactive Card */}
       <motion.div
-        style={{ x, y, rotate, touchAction: "none" }}
-        drag
-        dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-        dragElastic={0.45}
+        style={{ x, rotate }}
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.35}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="relative w-full h-full cursor-grab active:cursor-grabbing z-10 touch-none select-none"
+        className="relative w-full h-full cursor-grab active:cursor-grabbing z-10 select-none"
       >
-        {/* Swipe Feedback Overlay Badges */}
-        <motion.div
-          style={{ opacity: opacityKnown }}
-          className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-30 px-4 py-1.5 rounded-full bg-accent-green/20 border border-accent-green text-accent-green font-mono text-xs font-bold uppercase tracking-wider backdrop-blur-sm shadow-[0_0_20px_rgba(34,197,94,0.3)]"
-        >
-          ✓ Mark Known (Swipe Up)
-        </motion.div>
-
-        <motion.div
-          style={{ opacity: opacityRevise }}
-          className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 z-30 px-4 py-1.5 rounded-full bg-accent-amber/20 border border-accent-amber text-accent-amber font-mono text-xs font-bold uppercase tracking-wider backdrop-blur-sm shadow-[0_0_20px_rgba(245,158,11,0.3)]"
-        >
-          ↺ Revise Again (Swipe Down)
-        </motion.div>
-
+        {/* Horizontal Navigation Indicators */}
         <motion.div
           style={{ opacity: opacityNext }}
-          className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 z-30 px-3 py-1 rounded bg-white/10 border border-white/20 text-white font-mono text-xs font-bold backdrop-blur-sm"
+          className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 z-30 px-3 py-1 rounded bg-white/10 border border-white/20 text-white font-mono text-xs font-bold backdrop-blur-sm shadow-md"
         >
           Next →
         </motion.div>
 
         <motion.div
           style={{ opacity: opacityPrev }}
-          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 z-30 px-3 py-1 rounded bg-white/10 border border-white/20 text-white font-mono text-xs font-bold backdrop-blur-sm"
+          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 z-30 px-3 py-1 rounded bg-white/10 border border-white/20 text-white font-mono text-xs font-bold backdrop-blur-sm shadow-md"
         >
           ← Prev
         </motion.div>
@@ -238,8 +206,8 @@ export default function SwipeCard({
         <div className="w-full h-full rounded-card border border-border-subtle bg-surface shadow-card p-5 sm:p-7 flex flex-col justify-between overflow-hidden relative group hover:border-border-hover transition-colors">
           {/* Card Top Metadata Bar */}
           <div className="flex items-center justify-between gap-2 shrink-0 border-b border-border-subtle/80 pb-3">
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              {/* Status Indicator */}
+            <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+              {/* Question Status Pill */}
               <span
                 className={`font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold border ${
                   question.status === "known"
@@ -252,37 +220,40 @@ export default function SwipeCard({
                 {question.status}
               </span>
 
+              {/* Marks Badge */}
               {question.marks && (
-                <span className="inline-flex items-center gap-1 font-mono text-[11px] px-2 py-0.5 rounded bg-white/[0.04] border border-border-subtle text-foreground-secondary">
+                <span className="inline-flex items-center gap-1 font-mono text-[10px] px-2 py-0.5 rounded bg-white/5 border border-border-subtle text-foreground-secondary">
                   <Award className="h-3 w-3 text-accent-blue" />
                   {question.marks} Marks
                 </span>
               )}
 
+              {/* Year & Exam Tags */}
               {question.years && question.years.length > 0 && (
-                <span className="hidden sm:inline-flex items-center gap-1 font-mono text-[11px] px-2 py-0.5 rounded bg-white/[0.04] border border-border-subtle text-foreground-muted">
+                <span className="inline-flex items-center gap-1 font-mono text-[10px] px-2 py-0.5 rounded bg-white/5 border border-border-subtle text-foreground-secondary">
                   <Clock className="h-3 w-3" />
                   {question.years.join(", ")}
                 </span>
               )}
             </div>
 
-            {/* Quick Actions (Star, Note) */}
-            <div className="flex items-center gap-1">
+            {/* Star & Notes Action Buttons */}
+            <div className="flex items-center gap-1 shrink-0">
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   onOpenNotes();
                 }}
-                title={question.notes ? "View revision note" : "Add revision note (N)"}
-                className={`p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-btn transition-colors ${
-                  question.notes
-                    ? "text-accent-blue bg-accent-blue/10"
-                    : "text-foreground-muted hover:text-foreground hover:bg-white/5"
+                title="Personal Notes (N)"
+                className={`p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-btn hover:bg-white/5 transition-colors relative ${
+                  question.notes ? "text-accent-blue" : "text-foreground-muted hover:text-foreground"
                 }`}
               >
                 <StickyNote className="h-4 w-4" />
+                {question.notes && (
+                  <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-accent-blue" />
+                )}
               </button>
 
               <button
@@ -291,52 +262,36 @@ export default function SwipeCard({
                   e.stopPropagation();
                   onToggleStar();
                 }}
-                title="Star question (S)"
-                className={`p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-btn transition-colors ${
-                  question.starred
-                    ? "text-accent-gold fill-accent-gold"
-                    : "text-foreground-muted hover:text-foreground hover:bg-white/5"
+                title="Star Question (S)"
+                className={`p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-btn hover:bg-white/5 transition-colors ${
+                  question.starred ? "text-amber-400" : "text-foreground-muted hover:text-foreground"
                 }`}
               >
-                <Star
-                  className={`h-4 w-4 ${question.starred ? "fill-accent-gold text-accent-gold" : ""}`}
-                />
+                <Star className={`h-4 w-4 ${question.starred ? "fill-amber-400" : ""}`} />
               </button>
             </div>
           </div>
 
-          {/* Card Middle: Question & Answer (Scrollable container for long answers) */}
+          {/* Card Middle: Question + Answer Scroll Area */}
           <div
             onClick={handleMiddleClick}
-            className="flex-1 my-3 overflow-y-auto pr-1 flex flex-col justify-start cursor-pointer scroll-touch touch-pan-y"
+            className="flex-1 overflow-y-auto py-4 sm:py-5 space-y-4 scroll-touch cursor-pointer"
           >
             {/* Question Text */}
-            <div className="space-y-3 mb-4">
-              <div className="flex items-start gap-2">
-                <span className="font-mono text-xs font-bold text-accent-blue mt-1 shrink-0">Q.</span>
-                <h2 className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-foreground leading-snug">
-                  {question.question}
-                </h2>
-              </div>
-
-              {/* Personal Notes Banner if present */}
-              {question.notes && (
-                <div className="p-2.5 rounded-btn bg-accent-blue/[0.06] border border-accent-blue/20 text-xs text-accent-blue flex items-start gap-2">
-                  <StickyNote className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                  <span>
-                    <strong className="font-semibold">Note:</strong> {question.notes}
-                  </span>
-                </div>
-              )}
+            <div className="space-y-1">
+              <span className="font-mono text-xs font-semibold text-accent-blue tracking-wide uppercase">
+                Question
+              </span>
+              <p className="text-base sm:text-lg font-semibold text-foreground leading-snug">
+                {question.question}
+              </p>
             </div>
 
-            {/* Reveal Answer Section */}
+            {/* Answer (Toggled by Flip) */}
             {isFlipped ? (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-                className="pt-3 border-t border-border-subtle"
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="pt-3 border-t border-border-subtle cursor-text"
               >
                 <div className="flex items-center justify-between mb-3">
                   <span className="font-mono text-xs font-semibold text-foreground-secondary uppercase tracking-wider">
@@ -351,17 +306,21 @@ export default function SwipeCard({
                     No answer provided for this question yet.
                   </div>
                 )}
-              </motion.div>
+              </div>
             ) : (
-              <div className="mt-auto py-8 text-center flex flex-col items-center justify-center gap-2 text-foreground-muted hover:text-foreground transition-colors">
-                <Eye className="h-5 w-5 opacity-60" />
-                <span className="text-xs font-medium">Click or press Space to reveal answer</span>
-                <span className="font-mono text-[10px] text-neutral-500">[Space / Enter]</span>
+              /* Tap to reveal prompt */
+              <div className="py-6 flex flex-col items-center justify-center text-foreground-muted hover:text-foreground-secondary transition-colors gap-2">
+                <div className="h-10 w-10 rounded-full bg-white/[0.03] border border-border-subtle flex items-center justify-center">
+                  <Eye className="h-4 w-4" />
+                </div>
+                <span className="text-xs font-mono tracking-tight">
+                  Tap anywhere or press Space to reveal answer
+                </span>
               </div>
             )}
           </div>
 
-          {/* Card Bottom Action Bar */}
+          {/* Card Bottom Action Bar: ONLY Manual Known / Revise */}
           <div className="shrink-0 pt-3 border-t border-border-subtle flex items-center justify-between gap-2">
             <button
               type="button"
@@ -369,7 +328,7 @@ export default function SwipeCard({
                 e.stopPropagation();
                 onMarkRevise();
               }}
-              title="Revise Again (R / Swipe Down)"
+              title="Mark as Revise (R)"
               className="inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-3 min-h-[48px] rounded-btn text-xs sm:text-sm font-semibold bg-amber-500/10 border border-amber-500/25 text-amber-400 hover:bg-amber-500/20 transition-all active:scale-[0.98] flex-1"
             >
               <RotateCcw className="h-4 w-4 shrink-0" />
@@ -394,7 +353,7 @@ export default function SwipeCard({
                 e.stopPropagation();
                 onMarkKnown();
               }}
-              title="Mark as Known (K / Swipe Up)"
+              title="Mark as Known (K)"
               className="inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-3 min-h-[48px] rounded-btn text-xs sm:text-sm font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition-all active:scale-[0.98] flex-1"
             >
               <CheckCircle2 className="h-4 w-4 shrink-0" />
