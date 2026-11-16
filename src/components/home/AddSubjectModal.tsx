@@ -163,24 +163,6 @@ export default function AddSubjectModal({
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
-
-              {/* Quick Preset Pills for 1-Tap Mobile Selection */}
-              <div className="flex items-center gap-1.5 pt-2 overflow-x-auto pb-1 no-scrollbar">
-                {[1, 2, 3, 4, 5, 6, 8].map((count) => (
-                  <button
-                    key={count}
-                    type="button"
-                    onClick={() => setUnitCount(count)}
-                    className={`px-3 py-1.5 min-h-[36px] rounded-btn text-xs font-mono transition-all active:scale-95 shrink-0 ${
-                      unitCount === count
-                        ? "bg-white text-black font-bold shadow-sm"
-                        : "bg-white/5 border border-border-subtle hover:bg-white/10 text-foreground-secondary hover:text-foreground"
-                    }`}
-                  >
-                    {count} {count === 1 ? "Unit" : "Units"}
-                  </button>
-                ))}
-              </div>
             </div>
 
             <div>
