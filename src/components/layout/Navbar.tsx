@@ -46,14 +46,13 @@ export default function Navbar() {
           <Link
             href="/settings"
             aria-label="Settings"
-            className={`inline-flex items-center justify-center gap-1.5 text-xs font-medium p-2.5 sm:px-3 sm:py-2 min-h-[44px] min-w-[44px] rounded-btn transition-colors ${
+            className={`inline-flex items-center justify-center p-2.5 min-h-[44px] min-w-[44px] rounded-btn transition-colors ${
               pathname === "/settings"
                 ? "bg-white/10 text-foreground"
                 : "text-foreground-secondary hover:text-foreground hover:bg-white/[0.04]"
             }`}
           >
             <Settings className="h-4 w-4" />
-            <span className="hidden sm:inline">Settings</span>
           </Link>
         </div>
       </div>
