@@ -2,42 +2,24 @@
 
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { db, seedDemoData } from "@/lib/db";
+import { db } from "@/lib/db";
 import SubjectCard from "@/components/home/SubjectCard";
 import AddSubjectModal from "@/components/home/AddSubjectModal";
 import {
   Plus,
-  Sparkles,
-  BookOpen,
   Layers,
   Flame,
-  Award,
-  ArrowRight,
-  ShieldCheck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
   const router = useRouter();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isSeeding, setIsSeeding] = useState(false);
 
   // Live queries from IndexedDB
   const subjects = useLiveQuery(() => db.subjects.toArray(), []);
   const allUnits = useLiveQuery(() => db.units.toArray(), []);
   const allQuestions = useLiveQuery(() => db.questions.toArray(), []);
-
-  const handleSeedDemo = async () => {
-    setIsSeeding(true);
-    try {
-      const subjectId = await seedDemoData();
-      router.push(`/subject/${subjectId}`);
-    } catch (err: any) {
-      alert(`Error loading demo subject: ${err.message}`);
-    } finally {
-      setIsSeeding(false);
-    }
-  };
 
   const totalQuestionsCount = allQuestions ? allQuestions.length : 0;
   const knownQuestionsCount = allQuestions ? allQuestions.filter((q) => q.status === "known").length : 0;
@@ -64,7 +46,7 @@ export default function HomePage() {
             high-retention swipeable cards. Built for university students who want exam-ready mastery.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-3">
+          <div className="pt-3">
             <button
               type="button"
               onClick={() => setIsAddModalOpen(true)}
@@ -72,16 +54,6 @@ export default function HomePage() {
             >
               <Plus className="h-4 w-4" />
               Add Subject
-            </button>
-
-            <button
-              type="button"
-              disabled={isSeeding}
-              onClick={handleSeedDemo}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 sm:py-2.5 min-h-[44px] rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 text-sm font-semibold text-foreground hover:border-border-hover active:scale-[0.98] transition-all disabled:opacity-50"
-            >
-              <Sparkles className="h-4 w-4 text-accent-blue" />
-              {isSeeding ? "Loading Demo..." : "Load Demo Subject (DBMS)"}
             </button>
           </div>
         </div>
@@ -145,25 +117,16 @@ export default function HomePage() {
               </div>
               <h3 className="text-base font-bold text-foreground">No subjects created yet</h3>
               <p className="text-xs text-foreground-secondary max-w-sm mx-auto mt-1 mb-6 leading-relaxed">
-                Add your upcoming exam subject or load our interactive DBMS past-paper demo to explore Rattafy.
+                Create an exam subject to get started, then import past-paper questions and master them by unit.
               </p>
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(true)}
-                  className="w-full sm:w-auto px-5 py-3 sm:py-2 min-h-[44px] rounded-btn bg-white text-black text-xs sm:text-sm font-bold hover:bg-neutral-200 transition-all active:scale-[0.98]"
-                >
-                  Create Subject
-                </button>
-                <button
-                  type="button"
-                  disabled={isSeeding}
-                  onClick={handleSeedDemo}
-                  className="w-full sm:w-auto px-5 py-3 sm:py-2 min-h-[44px] rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 text-xs sm:text-sm font-semibold text-foreground transition-all active:scale-[0.98] disabled:opacity-50"
-                >
-                  Load DBMS Demo
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddModalOpen(true)}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 sm:py-2 min-h-[44px] rounded-btn bg-white text-black text-xs sm:text-sm font-bold hover:bg-neutral-200 transition-all active:scale-[0.98]"
+              >
+                <Plus className="h-4 w-4" />
+                Create Subject
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

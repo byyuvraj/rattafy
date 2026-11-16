@@ -159,7 +159,6 @@ export interface Question {
   - Quick action to "Study All" or open unit breakdown
 - Top actions:
   - "+ Add Subject"
-  - "Load Demo Subject" (Pre-populates DBMS Unit 1 & Unit 2 with rich past-paper questions)
   - Settings link
 
 ### Screen 3: Subject Detail Page
