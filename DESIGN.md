@@ -182,7 +182,6 @@ export interface Question {
   - Current unit title & active index (`Question 14 of 32`)
   - Animated progress bar
   - Filter pills: `All`, `Unknown Only`, `Starred Only`, `Repeated (×2+)`, `By Marks`
-  - Shuffle toggle
 - **Card Stack View**:
   - Top card rendered with Framer Motion drag gestures (horizontal swipe for Prev/Next, vertical swipe for Known/Revise).
   - Subtle preview/peek of next card positioned behind (`scale(0.96)`, slight vertical offset, lowered opacity).

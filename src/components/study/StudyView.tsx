@@ -313,11 +313,10 @@ export default function StudyView({
           <div
             className="h-full bg-accent-blue transition-all duration-300"
             style={{
-              width: `${
-                filteredQuestions.length > 0
-                  ? ((currentIndex + 1) / filteredQuestions.length) * 100
-                  : 0
-              }%`,
+              width: `${filteredQuestions.length > 0
+                ? ((currentIndex + 1) / filteredQuestions.length) * 100
+                : 0
+                }%`,
             }}
           />
         </div>
@@ -332,11 +331,10 @@ export default function StudyView({
               setActiveFilter("all");
               setCurrentIndex(0);
             }}
-            className={`px-3 py-1.5 min-h-[38px] flex items-center rounded-btn text-xs font-mono transition-colors shrink-0 ${
-              activeFilter === "all"
-                ? "bg-white text-black font-semibold"
-                : "text-foreground-secondary hover:text-foreground hover:bg-white/5"
-            }`}
+            className={`px-3 py-1.5 min-h-[38px] flex items-center rounded-btn text-xs font-mono transition-colors shrink-0 ${activeFilter === "all"
+              ? "bg-white text-black font-semibold"
+              : "text-foreground-secondary hover:text-foreground hover:bg-white/5"
+              }`}
           >
             All ({questions.length})
           </button>
@@ -347,11 +345,10 @@ export default function StudyView({
               setActiveFilter("unknown");
               setCurrentIndex(0);
             }}
-            className={`px-3 py-1.5 min-h-[38px] flex items-center rounded-btn text-xs font-mono transition-colors shrink-0 ${
-              activeFilter === "unknown"
-                ? "bg-white text-black font-semibold"
-                : "text-foreground-secondary hover:text-foreground hover:bg-white/5"
-            }`}
+            className={`px-3 py-1.5 min-h-[38px] flex items-center rounded-btn text-xs font-mono transition-colors shrink-0 ${activeFilter === "unknown"
+              ? "bg-white text-black font-semibold"
+              : "text-foreground-secondary hover:text-foreground hover:bg-white/5"
+              }`}
           >
             Unknown ({questions.filter((q) => q.status !== "known").length})
           </button>
@@ -362,11 +359,10 @@ export default function StudyView({
               setActiveFilter("starred");
               setCurrentIndex(0);
             }}
-            className={`inline-flex items-center gap-1 px-3 py-1.5 min-h-[38px] rounded-btn text-xs font-mono transition-colors shrink-0 ${
-              activeFilter === "starred"
-                ? "bg-white text-black font-semibold"
-                : "text-foreground-secondary hover:text-foreground hover:bg-white/5"
-            }`}
+            className={`inline-flex items-center gap-1 px-3 py-1.5 min-h-[38px] rounded-btn text-xs font-mono transition-colors shrink-0 ${activeFilter === "starred"
+              ? "bg-white text-black font-semibold"
+              : "text-foreground-secondary hover:text-foreground hover:bg-white/5"
+              }`}
           >
             <Star className="h-3 w-3" />
             Starred ({questions.filter((q) => q.starred).length})
@@ -378,11 +374,10 @@ export default function StudyView({
               setActiveFilter("repeated");
               setCurrentIndex(0);
             }}
-            className={`inline-flex items-center gap-1 px-3 py-1.5 min-h-[38px] rounded-btn text-xs font-mono transition-colors shrink-0 ${
-              activeFilter === "repeated"
-                ? "bg-white text-black font-semibold"
-                : "text-foreground-secondary hover:text-foreground hover:bg-white/5"
-            }`}
+            className={`inline-flex items-center gap-1 px-3 py-1.5 min-h-[38px] rounded-btn text-xs font-mono transition-colors shrink-0 ${activeFilter === "repeated"
+              ? "bg-white text-black font-semibold"
+              : "text-foreground-secondary hover:text-foreground hover:bg-white/5"
+              }`}
           >
             <Flame className="h-3 w-3 text-accent-blue" />
             Repeated ({questions.filter((q) => q.repeatCount > 1).length})
@@ -394,11 +389,10 @@ export default function StudyView({
           type="button"
           onClick={handleToggleShuffle}
           title="Toggle Shuffle"
-          className={`inline-flex items-center gap-1 px-3 py-1.5 min-h-[38px] rounded-btn text-xs font-mono transition-colors shrink-0 ${
-            isShuffled
-              ? "bg-accent-blue/20 text-accent-blue border border-accent-blue/30"
-              : "text-foreground-muted hover:text-foreground hover:bg-white/5"
-          }`}
+          className={`inline-flex items-center gap-1 px-3 py-1.5 min-h-[38px] rounded-btn text-xs font-mono transition-colors shrink-0 ${isShuffled
+            ? "bg-accent-blue/20 text-accent-blue border border-accent-blue/30"
+            : "text-foreground-muted hover:text-foreground hover:bg-white/5"
+            }`}
         >
           <Shuffle className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Shuffle</span>
