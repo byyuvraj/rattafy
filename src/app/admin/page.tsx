@@ -293,7 +293,7 @@ export default function AdminPage() {
                 autoFocus
                 value={passcode}
                 onChange={(e) => setPasscode(e.target.value)}
-                placeholder="Enter passcode (default: admin)"
+                placeholder="Enter admin passcode"
                 className="w-full rounded-btn border border-border-subtle bg-black px-3.5 py-2.5 min-h-[44px] text-base sm:text-xs text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none"
               />
             </div>
