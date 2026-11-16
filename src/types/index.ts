@@ -5,6 +5,8 @@ export interface Subject {
   name: string;
   createdAt: number;
   syllabus?: string;
+  unitsCount?: number;
+  questionsCount?: number;
 }
 
 export interface Unit {
@@ -27,7 +29,6 @@ export interface Question {
   status: QuestionStatus;
   starred: boolean;
   notes?: string;
-  aiGenerated?: boolean;
   createdAt: number;
   updatedAt: number;
 }
@@ -41,7 +42,6 @@ export interface ParsedQuestion {
   years: string[];
   exams: string[];
   repeatCount: number;
-  aiGenerated?: boolean;
 }
 
 export interface ParsedUnitGroup {
@@ -56,19 +56,7 @@ export interface ParseResult {
   warnings: string[];
 }
 
-export interface GeminiExtractedItem {
-  question: string;
-  answer?: string;
-  unit?: number;
-  unitTitle?: string;
-  marks?: number;
-  year?: string;
-  exam?: string;
-}
-
 export interface AppSettings {
-  apiKey: string;
-  model: string;
   autoSaveNotes: boolean;
   hapticFeedback: boolean;
 }

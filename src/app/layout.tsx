@@ -4,7 +4,6 @@ import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import SmoothScroll from "@/components/layout/SmoothScroll";
-import OnboardingModal from "@/components/onboarding/OnboardingModal";
 import { DialogProvider } from "@/components/ui/DialogProvider";
 
 export const metadata: Metadata = {
@@ -52,7 +51,6 @@ export default function RootLayout({
               <Navbar />
               <main className="flex-1">{children}</main>
             </div>
-            <OnboardingModal />
           </SmoothScroll>
         </DialogProvider>
       </body>

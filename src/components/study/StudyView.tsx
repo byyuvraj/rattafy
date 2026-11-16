@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Question, Unit, Subject } from "@/types";
-import { db } from "@/lib/db";
+import { setUserQuestionProgress } from "@/lib/userProgress";
 import { getStudySessionPosition, setStudySessionPosition } from "@/lib/storage";
 import SwipeCard from "./SwipeCard";
 import confetti from "canvas-confetti";
@@ -15,7 +15,6 @@ import {
   Star,
   CheckCircle2,
   StickyNote,
-  Sparkles,
   BookOpen,
 } from "lucide-react";
 
@@ -145,9 +144,8 @@ export default function StudyView({
         });
       }
 
-      await db.questions.update(activeQuestion.id, {
+      setUserQuestionProgress(activeQuestion.id, {
         status: newStatus,
-        updatedAt: Date.now(),
       });
 
       setQuestions((prev) =>
@@ -170,9 +168,8 @@ export default function StudyView({
     if (!activeQuestion) return;
     const newStar = !activeQuestion.starred;
 
-    await db.questions.update(activeQuestion.id, {
+    setUserQuestionProgress(activeQuestion.id, {
       starred: newStar,
-      updatedAt: Date.now(),
     });
 
     setQuestions((prev) =>
@@ -188,9 +185,8 @@ export default function StudyView({
 
   const handleSaveNotes = async () => {
     if (!activeQuestion) return;
-    await db.questions.update(activeQuestion.id, {
+    setUserQuestionProgress(activeQuestion.id, {
       notes: currentNoteText.trim(),
-      updatedAt: Date.now(),
     });
 
     setQuestions((prev) =>

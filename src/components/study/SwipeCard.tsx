@@ -9,7 +9,6 @@ import {
   Star,
   CheckCircle2,
   RotateCcw,
-  Sparkles,
   StickyNote,
   Eye,
   CornerDownLeft,
@@ -343,12 +342,6 @@ export default function SwipeCard({
                   <span className="font-mono text-xs font-semibold text-foreground-secondary uppercase tracking-wider">
                     Answer
                   </span>
-                  {question.aiGenerated && (
-                    <span className="inline-flex items-center gap-1 font-mono text-[10px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">
-                      <Sparkles className="h-3 w-3" />
-                      Gemini Verified
-                    </span>
-                  )}
                 </div>
 
                 {question.answer ? (

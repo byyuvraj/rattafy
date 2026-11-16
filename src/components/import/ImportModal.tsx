@@ -6,27 +6,17 @@ import {
   X,
   Upload,
   FileText,
-  Sparkles,
-  Camera,
-  AlertCircle,
   CheckCircle2,
-  Loader2,
-  Layers,
   ArrowRight,
   Info,
 } from "lucide-react";
 import { parsePastPaperText } from "@/lib/parser";
-import { extractQuestionsFromMedia, fileToBase64 } from "@/lib/gemini";
 import {
-  getApiKey,
-  getSelectedModel,
   getImportDraft,
   setImportDraft,
   clearImportDraft,
 } from "@/lib/storage";
-import { db } from "@/lib/db";
-import { generateId } from "@/lib/utils";
-import { Subject, Unit, ParsedUnitGroup, ParsedQuestion } from "@/types";
+import { Subject, Unit, ParsedUnitGroup } from "@/types";
 import ImportPreview from "./ImportPreview";
 import { useDialog } from "@/components/ui/DialogProvider";
 
@@ -46,59 +36,40 @@ export default function ImportModal({
   onImportComplete,
 }: ImportModalProps) {
   const { confirm, alert } = useDialog();
-  const [activeTab, setActiveTab] = useState<"text" | "scan">("text");
 
-  // Mode A: Text State
+  // Text State
   const [pastedText, setPastedText] = useState("");
-  const [isDraftRestored, setIsDraftRestored] = useState(false);
   const [liveStats, setLiveStats] = useState<{ totalQuestions: number; unitCount: number } | null>(null);
-
-  // Mode B: Scan State
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanProgress, setScanProgress] = useState<{
-    currentFile: string;
-    completed: number;
-    total: number;
-    error?: string;
-  } | null>(null);
 
   // Preview State
   const [parsedGroups, setParsedGroups] = useState<ParsedUnitGroup[] | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [hasApiKey, setHasApiKey] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const mediaInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setHasApiKey(Boolean(getApiKey()));
-
     if (isOpen) {
       const cached = getImportDraft(subject.id);
       if (cached && cached.trim()) {
         setPastedText(cached);
-        setIsDraftRestored(true);
       }
     }
   }, [isOpen, subject.id]);
 
   // Live preview counter for text mode & Auto-save to draft cache
   useEffect(() => {
-    if (activeTab === "text") {
-      setImportDraft(subject.id, pastedText);
+    setImportDraft(subject.id, pastedText);
 
-      if (pastedText.trim().length > 10) {
-        const res = parsePastPaperText(pastedText);
-        setLiveStats({
-          totalQuestions: res.totalQuestions,
-          unitCount: res.units.length,
-        });
-      } else {
-        setLiveStats(null);
-      }
+    if (pastedText.trim().length > 10) {
+      const res = parsePastPaperText(pastedText);
+      setLiveStats({
+        totalQuestions: res.totalQuestions,
+        unitCount: res.units.length,
+      });
+    } else {
+      setLiveStats(null);
     }
-  }, [pastedText, activeTab, subject.id]);
+  }, [pastedText, subject.id]);
 
   const handleClearDraft = async () => {
     const confirmed = await confirm({
@@ -110,25 +81,19 @@ export default function ImportModal({
     if (!confirmed) return;
     setPastedText("");
     clearImportDraft(subject.id);
-    setIsDraftRestored(false);
   };
 
-  // Reset when closing (keeps draft in storage for safety)
   const handleClose = () => {
     setParsedGroups(null);
-    setSelectedFiles([]);
-    setScanProgress(null);
     onClose();
   };
 
-  // Mode A: Parse and go to preview
   const handleParseText = () => {
     if (!pastedText.trim()) return;
     const result = parsePastPaperText(pastedText);
     setParsedGroups(result.units);
   };
 
-  // Upload .txt or .md file for Mode A
   const handleTextFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -144,184 +109,25 @@ export default function ImportModal({
     reader.readAsText(file);
   };
 
-  // Mode B: Gemini Paper Scanner
-  const handleMediaFilesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files);
-      setSelectedFiles((prev) => [...prev, ...files]);
-    }
-  };
-
-  const handleStartScan = async () => {
-    const apiKey = getApiKey();
-    if (!apiKey) {
-      await alert({
-        title: "Gemini API Key Required",
-        message: "Please configure your Google Gemini API key in Settings or Onboarding first.",
-        variant: "warning",
-      });
-      return;
-    }
-
-    if (selectedFiles.length === 0) return;
-
-    setIsScanning(true);
-    setScanProgress({
-      currentFile: selectedFiles[0].name,
-      completed: 0,
-      total: selectedFiles.length,
-    });
-
-    const model = getSelectedModel();
-    const syllabus = subject.syllabus || "";
-    const allExtractedQuestions: ParsedQuestion[] = [];
-
-    try {
-      for (let i = 0; i < selectedFiles.length; i++) {
-        const file = selectedFiles[i];
-        setScanProgress({
-          currentFile: file.name,
-          completed: i,
-          total: selectedFiles.length,
-        });
-
-        const fileData = await fileToBase64(file);
-        const extracted = await extractQuestionsFromMedia(
-          apiKey,
-          model,
-          fileData,
-          syllabus
-        );
-
-        for (const item of extracted) {
-          if (!item.question || !item.question.trim()) continue;
-
-          allExtractedQuestions.push({
-            question: item.question.trim(),
-            answer: item.answer?.trim() || "",
-            unitNumber: item.unit !== undefined && item.unit !== null ? item.unit : 0,
-            unitTitle: item.unitTitle || (item.unit ? `Unit ${item.unit}` : "Unsorted Questions"),
-            marks: item.marks || undefined,
-            years: item.year ? [item.year] : [],
-            exams: item.exam ? [item.exam] : [],
-            repeatCount: 1,
-            aiGenerated: false,
-          });
-        }
-      }
-
-      // Group extracted questions by unit and merge duplicates
-      const unitMap = new Map<number, ParsedUnitGroup>();
-
-      for (const q of allExtractedQuestions) {
-        const unitNum = q.unitNumber ?? 0;
-        if (!unitMap.has(unitNum)) {
-          unitMap.set(unitNum, {
-            unitNumber: unitNum,
-            unitTitle: q.unitTitle || (unitNum === 0 ? "Unsorted Questions" : `Unit ${unitNum}`),
-            questions: [],
-          });
-        }
-
-        const group = unitMap.get(unitNum)!;
-        const normQ = q.question.toLowerCase().replace(/[^\w\s]/g, "").trim();
-        const existing = group.questions.find(
-          (ex) => ex.question.toLowerCase().replace(/[^\w\s]/g, "").trim() === normQ
-        );
-
-        if (existing) {
-          existing.years = Array.from(new Set([...existing.years, ...q.years]));
-          existing.exams = Array.from(new Set([...existing.exams, ...q.exams]));
-          existing.repeatCount = Math.max(existing.repeatCount + 1, existing.years.length);
-          if (q.answer && (!existing.answer || q.answer.length > existing.answer.length)) {
-            existing.answer = q.answer;
-          }
-        } else {
-          group.questions.push(q);
-        }
-      }
-
-      const sortedGroups = Array.from(unitMap.values()).sort((a, b) => {
-        if (a.unitNumber === 0) return 1;
-        if (b.unitNumber === 0) return -1;
-        return a.unitNumber - b.unitNumber;
-      });
-
-      setParsedGroups(sortedGroups);
-    } catch (err: any) {
-      await alert({
-        title: "Scanning Error",
-        message: `Paper scanning failed: ${err.message}`,
-        variant: "danger",
-      });
-    } finally {
-      setIsScanning(false);
-      setScanProgress(null);
-    }
-  };
-
-  // Confirm and persist everything into Dexie IndexedDB
+  // Confirm and persist into Server Database via API
   const handleConfirmImport = async () => {
     if (!parsedGroups || parsedGroups.length === 0) return;
 
     setIsSaving(true);
     try {
-      const now = Date.now();
-      const existingUnits = await db.units.where("subjectId").equals(subject.id).toArray();
-      const unitMapByNumber = new Map<number, string>();
-
-      existingUnits.forEach((u) => {
-        unitMapByNumber.set(u.number, u.id);
+      const res = await fetch("/api/questions/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subjectId: subject.id,
+          groups: parsedGroups,
+        }),
       });
 
-      const newUnitsToAdd: Unit[] = [];
-      const newQuestionsToAdd: any[] = [];
-
-      for (const group of parsedGroups) {
-        let unitId = unitMapByNumber.get(group.unitNumber);
-
-        // If unit doesn't exist yet in DB, create it
-        if (!unitId) {
-          unitId = generateId();
-          unitMapByNumber.set(group.unitNumber, unitId);
-          newUnitsToAdd.push({
-            id: unitId,
-            subjectId: subject.id,
-            number: group.unitNumber,
-            title: group.unitTitle || (group.unitNumber === 0 ? "Unsorted Questions" : `Unit ${group.unitNumber}`),
-          });
-        }
-
-        // Add questions under this unit
-        for (const q of group.questions) {
-          newQuestionsToAdd.push({
-            id: generateId(),
-            subjectId: subject.id,
-            unitId: unitId,
-            question: q.question,
-            answer: q.answer,
-            marks: q.marks,
-            years: q.years || [],
-            exams: q.exams || [],
-            repeatCount: q.repeatCount || (q.years && q.years.length > 1 ? q.years.length : 1),
-            status: "new",
-            starred: false,
-            notes: "",
-            aiGenerated: Boolean(q.aiGenerated),
-            createdAt: now,
-            updatedAt: now,
-          });
-        }
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Server responded with ${res.status}`);
       }
-
-      await db.transaction("rw", db.units, db.questions, async () => {
-        if (newUnitsToAdd.length > 0) {
-          await db.units.bulkAdd(newUnitsToAdd);
-        }
-        if (newQuestionsToAdd.length > 0) {
-          await db.questions.bulkAdd(newQuestionsToAdd);
-        }
-      });
 
       clearImportDraft(subject.id);
       setPastedText("");
@@ -364,7 +170,7 @@ export default function ImportModal({
                 <Upload className="h-4 w-4" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-foreground">Import Exam Content</h2>
+                <h2 className="text-base font-bold text-foreground">Import Exam Questions</h2>
                 <p className="text-xs text-foreground-secondary truncate max-w-[200px] sm:max-w-md">
                   Target: <span className="font-semibold text-foreground">{subject.name}</span>
                 </p>
@@ -390,7 +196,7 @@ export default function ImportModal({
                   onClick={() => setParsedGroups(null)}
                   className="text-xs text-foreground-secondary hover:text-foreground underline mb-4 inline-flex items-center gap-1 py-1 min-h-[36px]"
                 >
-                  ← Back to Upload / Input
+                  ← Back to Input
                 </button>
                 <ImportPreview
                   groups={parsedGroups}
@@ -402,264 +208,108 @@ export default function ImportModal({
                 />
               </div>
             ) : (
-              // Step 1: Input Mode Selection & Inputs
-              <div className="space-y-6">
-                {/* Tabs */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-1 rounded-card bg-black/50 border border-border-subtle">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("text")}
-                    className={`flex items-center justify-center gap-2 py-3 px-3 min-h-[44px] rounded-btn text-xs font-semibold transition-all ${
-                      activeTab === "text"
-                        ? "bg-white text-black shadow-sm"
-                        : "text-foreground-secondary hover:text-foreground hover:bg-white/[0.03]"
-                    }`}
-                  >
-                    <FileText className="h-4 w-4 shrink-0" />
-                    <span>MODE A: Smart Text Import</span>
-                    <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-300">
-                      Offline
-                    </span>
-                  </button>
+              // Step 1: Text Input Screen
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-medium text-foreground">
+                      Paste past-paper text or upload .txt / .md
+                    </label>
+                    {liveStats && (
+                      <span className="font-mono text-[11px] text-accent-blue bg-accent-blue/10 px-2 py-0.5 rounded-full border border-accent-blue/20">
+                        {liveStats.totalQuestions} Qs ({liveStats.unitCount} units)
+                      </span>
+                    )}
+                  </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("scan")}
-                    className={`flex items-center justify-center gap-2 py-3 px-3 min-h-[44px] rounded-btn text-xs font-semibold transition-all ${
-                      activeTab === "scan"
-                        ? "bg-white text-black shadow-sm"
-                        : "text-foreground-secondary hover:text-foreground hover:bg-white/[0.03]"
-                    }`}
-                  >
-                    <Sparkles className="h-4 w-4 text-accent-blue shrink-0" />
-                    <span>MODE B: Scan with Gemini</span>
-                    <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-accent-blue/20 text-accent-blue">
-                      Multimodal
-                    </span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".txt,.md"
+                      onChange={handleTextFileUpload}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="inline-flex items-center gap-1.5 text-xs text-foreground-secondary hover:text-foreground px-3 py-2 min-h-[44px] rounded-btn bg-white/5 border border-border-subtle hover:border-border-hover transition-colors"
+                    >
+                      <Upload className="h-3.5 w-3.5" />
+                      Upload .txt / .md
+                    </button>
+                  </div>
                 </div>
 
-                {/* MODE A Content */}
-                {activeTab === "text" && (
-                  <div className="space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <label className="text-xs font-medium text-foreground">
-                          Paste past-paper text or upload .txt / .md
-                        </label>
-                        {liveStats && (
-                          <span className="font-mono text-[11px] text-accent-blue bg-accent-blue/10 px-2 py-0.5 rounded-full border border-accent-blue/20">
-                            {liveStats.totalQuestions} Qs ({liveStats.unitCount} units)
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept=".txt,.md"
-                          onChange={handleTextFileUpload}
-                          className="hidden"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="inline-flex items-center gap-1.5 text-xs text-foreground-secondary hover:text-foreground px-3 py-2 min-h-[44px] rounded-btn bg-white/5 border border-border-subtle hover:border-border-hover transition-colors"
-                        >
-                          <Upload className="h-3.5 w-3.5" />
-                          Upload .txt / .md
-                        </button>
-                      </div>
-                    </div>
-
-                    {pastedText.trim().length > 0 && (
-                      <div className="flex items-center justify-between text-[11px] px-1 py-1 rounded bg-white/[0.02] border border-border-subtle/60">
-                        <span className="inline-flex items-center gap-1.5 text-emerald-400 font-mono">
-                          <CheckCircle2 className="h-3 w-3" />
-                          Draft auto-saved to browser cache
-                        </span>
-                        <button
-                          type="button"
-                          onClick={handleClearDraft}
-                          className="text-foreground-muted hover:text-red-400 hover:underline px-2 py-0.5 text-xs"
-                        >
-                          Clear draft
-                        </button>
-                      </div>
-                    )}
-
-                    <textarea
-                      rows={10}
-                      value={pastedText}
-                      onChange={(e) => setPastedText(e.target.value)}
-                      placeholder={`Unit 1: Introduction
-Q1. What is a database management system?
-[2023 | MST1 | 5 marks]
-A DBMS is software that stores, retrieves and manages data...
-\`\`\``}
-                      className="w-full rounded-card border border-border-subtle bg-black p-3.5 sm:p-4 font-mono text-base sm:text-xs text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none transition-colors"
-                    />
-
-                    {/* Format Guidelines Tip */}
-                    <div className="flex items-start gap-2.5 p-3 rounded-card bg-white/[0.02] border border-border-subtle text-xs text-foreground-muted">
-                      <Info className="h-4 w-4 text-accent-blue shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <p className="text-foreground-secondary font-medium">Deterministic Format Rules:</p>
-                        <p>
-                          • Questions begin with <code className="font-mono text-foreground">Q1.</code>, <code className="font-mono text-foreground">Q.1</code>, <code className="font-mono text-foreground">Q1)</code>, or <code className="font-mono text-foreground">Q:</code>.
-                        </p>
-                        <p>
-                          • Answers are terminated strictly by a standalone <code className="font-mono text-foreground">```</code> line. Inner code blocks wrapped in <code className="font-mono text-foreground">~~~</code> are preserved safely.
-                        </p>
-                        <p>
-                          • Unit lines like <code className="font-mono text-foreground">Unit 1: Title</code> switch the active unit. Metadata tags like <code className="font-mono text-foreground">[2023 | MST1 | 5 marks]</code> are auto-parsed.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end pt-2">
-                      <button
-                        type="button"
-                        disabled={!pastedText.trim()}
-                        onClick={handleParseText}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[48px] rounded-btn bg-white text-black text-sm font-bold hover:bg-neutral-200 active:scale-[0.98] transition-all disabled:opacity-40"
-                      >
-                        Parse & Review Questions
-                        <ArrowRight className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* MODE B Content */}
-                {activeTab === "scan" && (
-                  <div className="space-y-4">
-                    {!hasApiKey && (
-                      <div className="flex items-start gap-3 p-3.5 rounded-card border border-amber-500/20 bg-amber-500/10 text-xs text-amber-300">
-                        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-semibold">Gemini API Key Required</p>
-                          <p className="text-neutral-300">
-                            Paper scanning requires a Gemini API key. Add your key in{" "}
-                            <a href="/settings" className="underline text-accent-blue font-medium">
-                              Settings
-                            </a>{" "}
-                            to unlock multimodal OCR, syllabus mapping, and question deduplication.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Drag and Drop Zone */}
-                    <div
-                      onClick={() => mediaInputRef.current?.click()}
-                      className="border-2 border-dashed border-border-subtle hover:border-accent-blue/50 rounded-card p-6 sm:p-8 flex flex-col items-center justify-center cursor-pointer transition-colors bg-white/[0.01] hover:bg-white/[0.03]"
+                {pastedText.trim().length > 0 && (
+                  <div className="flex items-center justify-between text-[11px] px-1 py-1 rounded bg-white/[0.02] border border-border-subtle/60">
+                    <span className="inline-flex items-center gap-1.5 text-emerald-400 font-mono">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Draft auto-saved to browser cache
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleClearDraft}
+                      className="text-foreground-muted hover:text-red-400 hover:underline px-2 py-0.5 text-xs"
                     >
-                      <input
-                        ref={mediaInputRef}
-                        type="file"
-                        multiple
-                        accept="image/*,.pdf"
-                        onChange={handleMediaFilesSelected}
-                        className="hidden"
-                      />
-                      <div className="h-12 w-12 rounded-full bg-accent-blue/10 flex items-center justify-center text-accent-blue mb-3">
-                        <Camera className="h-6 w-6" />
-                      </div>
-                      <p className="text-sm font-semibold text-foreground text-center">
-                        Upload past papers, MST sheets, or question photos
-                      </p>
-                      <p className="text-xs text-foreground-muted mt-1 text-center">
-                        Supports PNG, JPG, WebP, and PDF pages. Tap to select from device/camera.
-                      </p>
-                    </div>
-
-                    {/* Selected Files List */}
-                    {selectedFiles.length > 0 && (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-xs text-foreground-secondary">
-                          <span>{selectedFiles.length} files selected:</span>
-                          <button
-                            type="button"
-                            onClick={() => setSelectedFiles([])}
-                            className="text-red-400 hover:underline py-1"
-                          >
-                            Clear all
-                          </button>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto">
-                          {selectedFiles.map((f, i) => (
-                            <div
-                              key={i}
-                              className="flex items-center justify-between px-3 py-2 rounded-btn bg-surface-elevated border border-border-subtle text-xs"
-                            >
-                              <span className="truncate max-w-[200px] text-foreground font-mono">{f.name}</span>
-                              <span className="text-[10px] text-foreground-muted">
-                                {(f.size / 1024).toFixed(0)} KB
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Scan Progress */}
-                    {isScanning && scanProgress && (
-                      <div className="p-4 rounded-card bg-surface-elevated border border-border-subtle space-y-2">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="flex items-center gap-2 text-accent-blue font-medium">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Scanning {scanProgress.currentFile}...
-                          </span>
-                          <span className="font-mono text-foreground-muted">
-                            {scanProgress.completed + 1} of {scanProgress.total}
-                          </span>
-                        </div>
-                        <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
-                          <div
-                            className="h-full bg-accent-blue transition-all duration-300"
-                            style={{
-                              width: `${((scanProgress.completed + 1) / scanProgress.total) * 100}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Subject Syllabus Context Notice */}
-                    {subject.syllabus && (
-                      <div className="p-3 rounded-card bg-white/[0.02] border border-border-subtle text-xs text-foreground-muted flex items-start gap-2">
-                        <Layers className="h-4 w-4 text-foreground-secondary shrink-0 mt-0.5" />
-                        <div>
-                          <span className="text-foreground-secondary font-medium">Syllabus Mapping Active:</span>{" "}
-                          Gemini will automatically map questions to your subject&apos;s registered units.
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex justify-end pt-2">
-                      <button
-                        type="button"
-                        disabled={selectedFiles.length === 0 || isScanning || !hasApiKey}
-                        onClick={handleStartScan}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[48px] rounded-btn bg-white text-black text-sm font-bold hover:bg-neutral-200 active:scale-[0.98] transition-all disabled:opacity-40"
-                      >
-                        {isScanning ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Extracting Papers...
-                          </>
-                        ) : (
-                          <>
-                            Scan with Gemini
-                            <Sparkles className="h-4 w-4 text-accent-blue" />
-                          </>
-                        )}
-                      </button>
-                    </div>
+                      Clear draft
+                    </button>
                   </div>
                 )}
+
+                <textarea
+                  rows={12}
+                  value={pastedText}
+                  onChange={(e) => setPastedText(e.target.value)}
+                  placeholder={`Unit 1: Introduction to DBMS
+Q1. What is a Database Management System? Explain its main advantages over traditional file systems.
+[2023 | MST1 | 5 marks]
+A Database Management System (DBMS) is system software for creating and managing databases.
+
+Key advantages include:
+1. Data Independence: Separation of data structure from application programs.
+2. Controlled Redundancy: Eliminates duplicate data entries.
+3. Concurrency Control: Allows multiple users to access data simultaneously.
+\`\`\`
+
+Unit 2: Relational Model
+Q2. Explain the difference between primary key, candidate key, and foreign key with an example.
+[2022 | End-Term | 7 marks]
+- Candidate Key: Minimal set of attributes that can uniquely identify a tuple.
+- Primary Key: The chosen candidate key by the database designer.
+- Foreign Key: An attribute matching the primary key of another relation.
+\`\`\``}
+                  className="w-full rounded-card border border-border-subtle bg-black p-3.5 sm:p-4 font-mono text-base sm:text-xs text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none transition-colors"
+                />
+
+                {/* Format Guidelines Tip */}
+                <div className="flex items-start gap-2.5 p-3 rounded-card bg-white/[0.02] border border-border-subtle text-xs text-foreground-muted">
+                  <Info className="h-4 w-4 text-accent-blue shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="text-foreground-secondary font-medium">Deterministic Format Rules:</p>
+                    <p>
+                      • Questions begin with <code className="font-mono text-foreground">Q1.</code>, <code className="font-mono text-foreground">Q.1</code>, <code className="font-mono text-foreground">Q1)</code>, or <code className="font-mono text-foreground">Q:</code>.
+                    </p>
+                    <p>
+                      • Answers are terminated strictly by a standalone <code className="font-mono text-foreground">```</code> line. Inner code blocks wrapped in <code className="font-mono text-foreground">~~~</code> are preserved safely.
+                    </p>
+                    <p>
+                      • Unit headers like <code className="font-mono text-foreground">Unit 1: Title</code> automatically group subsequent questions. Metadata tags like <code className="font-mono text-foreground">[2023 | MST1 | 5 marks]</code> are auto-parsed.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="button"
+                    disabled={!pastedText.trim()}
+                    onClick={handleParseText}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[48px] rounded-btn bg-white text-black text-sm font-bold hover:bg-neutral-200 active:scale-[0.98] transition-all disabled:opacity-40"
+                  >
+                    Parse & Review Questions
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             )}
           </div>

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Question, Unit, Subject } from "@/types";
-import { db } from "@/lib/db";
+import { setUserQuestionProgress } from "@/lib/userProgress";
 import {
   Search,
   ChevronDown,
@@ -64,12 +64,12 @@ export default function OverviewMode({
   }, [questions, searchQuery, statusFilter]);
 
   const handleToggleStar = async (q: Question) => {
-    await db.questions.update(q.id, { starred: !q.starred });
+    setUserQuestionProgress(q.id, { starred: !q.starred });
     onQuestionsUpdated?.();
   };
 
   const handleSetStatus = async (q: Question, status: "known" | "learning" | "new") => {
-    await db.questions.update(q.id, { status });
+    setUserQuestionProgress(q.id, { status });
     onQuestionsUpdated?.();
   };
 
@@ -81,7 +81,9 @@ export default function OverviewMode({
       variant: "danger",
     });
     if (confirmed) {
-      await db.questions.delete(q.id);
+      try {
+        await fetch(`/api/questions/${q.id}`, { method: "DELETE" });
+      } catch {}
       onQuestionsUpdated?.();
     }
   };

@@ -1,130 +1,110 @@
 "use client";
 
-import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "@/lib/db";
-import { generateId, formatPercent } from "@/lib/utils";
+import { formatPercent } from "@/lib/utils";
 import { Unit, Question, Subject } from "@/types";
 import UnitCard from "@/components/subject/UnitCard";
-import ImportModal from "@/components/import/ImportModal";
 import StudyView from "@/components/study/StudyView";
 import OverviewMode from "@/components/subject/OverviewMode";
-import { useDialog } from "@/components/ui/DialogProvider";
+import { getUserProgress } from "@/lib/userProgress";
 import {
   Play,
-  Upload,
-  Plus,
-  Minus,
-  Trash2,
-  BookOpen,
-  Layers,
   Star,
-  Settings2,
   ChevronRight,
-  FileText,
   List,
+  Loader2,
+  BookOpen,
 } from "lucide-react";
 
 export default function SubjectPage() {
   const params = useParams();
-  const router = useRouter();
   const subjectId = params.id as string;
-  const { confirm } = useDialog();
+
+  const [subject, setSubject] = useState<Subject | null>(null);
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Modals & View Modes
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [activeStudyUnit, setActiveStudyUnit] = useState<Unit | null>(null);
   const [isStudyAllOpen, setIsStudyAllOpen] = useState(false);
   const [activeOverviewUnit, setActiveOverviewUnit] = useState<Unit | null>(null);
   const [isOverviewAllOpen, setIsOverviewAllOpen] = useState(false);
-  const [isAddUnitOpen, setIsAddUnitOpen] = useState(false);
-  const [newUnitTitle, setNewUnitTitle] = useState("");
-  const [newUnitNumber, setNewUnitNumber] = useState<number>(1);
-  const [isEditingSyllabus, setIsEditingSyllabus] = useState(false);
-  const [syllabusInput, setSyllabusInput] = useState("");
 
-  // Live queries
-  const subject = useLiveQuery(() => db.subjects.get(subjectId), [subjectId]);
-  const units = useLiveQuery(
-    () => db.units.where("subjectId").equals(subjectId).sortBy("number"),
-    [subjectId]
-  );
-  const questions = useLiveQuery(
-    () => db.questions.where("subjectId").equals(subjectId).toArray(),
-    [subjectId]
-  );
+  const loadData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch(`/api/subjects/${subjectId}`);
+      if (!res.ok) {
+        setSubject(null);
+        return;
+      }
+      const data = await res.json();
+      setSubject(data.subject);
+      setUnits(data.units || []);
+
+      const userProgress = getUserProgress();
+      const mergedQuestions: Question[] = (data.questions || []).map((q: Question) => {
+        const prog = userProgress[q.id];
+        return {
+          ...q,
+          status: prog?.status || "new",
+          starred: prog?.starred ?? false,
+          notes: prog?.notes || "",
+        };
+      });
+
+      setQuestions(mergedQuestions);
+    } catch {
+      setSubject(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [subjectId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-20 flex flex-col items-center justify-center gap-3">
+        <Loader2 className="h-6 w-6 animate-spin text-accent-blue" />
+        <p className="text-xs font-mono text-foreground-muted">Loading subject content...</p>
+      </div>
+    );
+  }
 
   if (!subject) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-20 text-center">
-        <p className="text-sm text-foreground-secondary">Loading subject or subject not found...</p>
-        <Link href="/" className="mt-4 inline-block text-xs text-accent-blue underline">
-          Return to Subjects
+      <div className="mx-auto max-w-6xl px-4 py-20 text-center space-y-4">
+        <p className="text-sm text-foreground-secondary">Subject not found.</p>
+        <Link href="/" className="inline-block text-xs text-accent-blue underline">
+          ← Return to Subjects
         </Link>
       </div>
     );
   }
 
-  const subjectUnits = units || [];
-  const subjectQuestions = questions || [];
-
-  const totalQuestions = subjectQuestions.length;
-  const knownCount = subjectQuestions.filter((q) => q.status === "known").length;
+  const totalQuestions = questions.length;
+  const knownCount = questions.filter((q) => q.status === "known").length;
   const percentKnown = formatPercent(knownCount, totalQuestions);
-  const starredCount = subjectQuestions.filter((q) => q.starred).length;
-
-  // Add unit handler
-  const handleAddUnit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newUnitTitle.trim()) return;
-
-    await db.units.add({
-      id: generateId(),
-      subjectId,
-      number: newUnitNumber,
-      title: newUnitTitle.trim(),
-    });
-
-    setNewUnitTitle("");
-    setIsAddUnitOpen(false);
-  };
-
-  // Delete subject handler
-  const handleDeleteSubject = async () => {
-    const confirmed = await confirm({
-      title: "Delete Subject?",
-      message: `Are you sure you want to delete "${subject.name}" and all its units & questions? This cannot be undone.`,
-      confirmLabel: "Delete Subject",
-      variant: "danger",
-    });
-
-    if (confirmed) {
-      await db.transaction("rw", db.subjects, db.units, db.questions, async () => {
-        await db.questions.where("subjectId").equals(subjectId).delete();
-        await db.units.where("subjectId").equals(subjectId).delete();
-        await db.subjects.delete(subjectId);
-      });
-      router.push("/");
-    }
-  };
-
-  // Save syllabus handler
-  const handleSaveSyllabus = async () => {
-    await db.subjects.update(subjectId, { syllabus: syllabusInput });
-    setIsEditingSyllabus(false);
-  };
+  const starredCount = questions.filter((q) => q.starred).length;
 
   // Full-screen Study View for single unit
   if (activeStudyUnit) {
-    const unitQuestions = subjectQuestions.filter((q) => q.unitId === activeStudyUnit.id);
+    const unitQuestions = questions.filter((q) => q.unitId === activeStudyUnit.id);
     return (
       <StudyView
         subject={subject}
         unit={activeStudyUnit}
         initialQuestions={unitQuestions}
-        onClose={() => setActiveStudyUnit(null)}
+        onClose={() => {
+          setActiveStudyUnit(null);
+          loadData();
+        }}
       />
     );
   }
@@ -134,8 +114,11 @@ export default function SubjectPage() {
     return (
       <StudyView
         subject={subject}
-        initialQuestions={subjectQuestions}
-        onClose={() => setIsStudyAllOpen(false)}
+        initialQuestions={questions}
+        onClose={() => {
+          setIsStudyAllOpen(false);
+          loadData();
+        }}
       />
     );
   }
@@ -156,14 +139,22 @@ export default function SubjectPage() {
         <OverviewMode
           subject={subject}
           unit={activeOverviewUnit}
-          questions={subjectQuestions.filter((q) => q.unitId === activeOverviewUnit.id)}
-          onClose={() => setActiveOverviewUnit(null)}
+          questions={questions.filter((q) => q.unitId === activeOverviewUnit.id)}
+          onClose={() => {
+            setActiveOverviewUnit(null);
+            loadData();
+          }}
+          onQuestionsUpdated={loadData}
         />
       ) : isOverviewAllOpen ? (
         <OverviewMode
           subject={subject}
-          questions={subjectQuestions}
-          onClose={() => setIsOverviewAllOpen(false)}
+          questions={questions}
+          onClose={() => {
+            setIsOverviewAllOpen(false);
+            loadData();
+          }}
+          onQuestionsUpdated={loadData}
         />
       ) : (
         <>
@@ -173,7 +164,7 @@ export default function SubjectPage() {
               <div className="space-y-2 max-w-2xl">
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-foreground-muted font-mono">
-                    {subjectUnits.length} Units
+                    {units.length} Units
                   </span>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
@@ -197,34 +188,14 @@ export default function SubjectPage() {
                   Study All ({totalQuestions})
                 </button>
 
-                <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
-                  <button
-                    type="button"
-                    disabled={totalQuestions === 0}
-                    onClick={() => setIsOverviewAllOpen(true)}
-                    className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[44px] rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 text-xs font-semibold text-foreground transition-all disabled:opacity-40"
-                  >
-                    <List className="h-3.5 w-3.5" />
-                    Browse All
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setIsImportModalOpen(true)}
-                    className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[44px] rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 text-xs font-semibold text-foreground hover:border-accent-blue/40 transition-all"
-                  >
-                    <Upload className="h-3.5 w-3.5 text-accent-blue" />
-                    Import Papers
-                  </button>
-                </div>
-
                 <button
                   type="button"
-                  onClick={handleDeleteSubject}
-                  title="Delete subject"
-                  className="hidden sm:inline-flex p-2.5 min-h-[44px] min-w-[44px] items-center justify-center rounded-btn text-foreground-muted hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                  disabled={totalQuestions === 0}
+                  onClick={() => setIsOverviewAllOpen(true)}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 text-xs font-semibold text-foreground transition-all disabled:opacity-40"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <List className="h-3.5 w-3.5" />
+                  Browse Questions
                 </button>
               </div>
             </div>
@@ -240,7 +211,7 @@ export default function SubjectPage() {
 
               <div className="space-y-1">
                 <span className="text-[11px] font-mono text-foreground-muted uppercase">
-                  Exam Mastery
+                  My Exam Mastery
                 </span>
                 <div className="flex items-baseline gap-1.5">
                   <p className="text-xl font-bold font-mono text-accent-green">{percentKnown}%</p>
@@ -252,7 +223,7 @@ export default function SubjectPage() {
 
               <div className="space-y-1">
                 <span className="text-[11px] font-mono text-foreground-muted uppercase">
-                  Starred Questions
+                  My Starred Questions
                 </span>
                 <div className="flex items-baseline gap-1 text-amber-300">
                   <Star className="h-4 w-4 fill-amber-300" />
@@ -262,91 +233,35 @@ export default function SubjectPage() {
             </div>
           </div>
 
-          {/* Syllabus Context Box */}
-          <div className="rounded-card border border-border-subtle bg-surface p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <Layers className="h-4 w-4 text-foreground-muted" />
-                <span className="text-xs font-semibold text-foreground">
-                  Subject Syllabus Outline (Context for Gemini Unit Mapping)
-                </span>
+          {/* Syllabus / Notes Card if present */}
+          {subject.syllabus && (
+            <div className="rounded-card border border-border-subtle bg-surface p-4">
+              <div className="flex items-center gap-2 mb-2 text-xs font-semibold text-foreground">
+                <BookOpen className="h-4 w-4 text-accent-blue" />
+                <span>Course & Syllabus Outline</span>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setSyllabusInput(subject.syllabus || "");
-                  setIsEditingSyllabus((e) => !e);
-                }}
-                className="text-xs text-accent-blue hover:underline"
-              >
-                {isEditingSyllabus ? "Cancel" : subject.syllabus ? "Edit Syllabus" : "+ Add Syllabus"}
-              </button>
-            </div>
-
-            {isEditingSyllabus ? (
-              <div className="space-y-2 mt-2">
-                <textarea
-                  rows={4}
-                  value={syllabusInput}
-                  onChange={(e) => setSyllabusInput(e.target.value)}
-                  placeholder="Paste your course units & syllabus topics here..."
-                  className="w-full rounded-btn border border-border-subtle bg-black p-3 text-xs text-foreground font-mono focus:outline-none focus:border-border-focus"
-                />
-                <button
-                  type="button"
-                  onClick={handleSaveSyllabus}
-                  className="px-3.5 py-1.5 rounded-btn bg-white text-black text-xs font-semibold hover:bg-neutral-200"
-                >
-                  Save Syllabus Context
-                </button>
-              </div>
-            ) : subject.syllabus ? (
-              <p className="text-xs text-foreground-muted font-mono whitespace-pre-line line-clamp-3">
+              <p className="text-xs text-foreground-secondary font-mono whitespace-pre-line leading-relaxed">
                 {subject.syllabus}
               </p>
-            ) : (
-              <p className="text-xs text-foreground-muted italic">
-                No syllabus configured. Adding your course syllabus helps Gemini automatically map scanned questions to units.
-              </p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Units Section */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-foreground">Units & Modules</h2>
-              <button
-                type="button"
-                onClick={() => {
-                  setNewUnitNumber(subjectUnits.length + 1);
-                  setIsAddUnitOpen(true);
-                }}
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 text-xs font-medium text-foreground transition-colors"
-              >
-                <Plus className="h-4 w-4" />
-                Add Unit
-              </button>
-            </div>
+            <h2 className="text-base font-bold text-foreground">Units & Modules</h2>
 
             {/* Units Grid */}
-            {subjectUnits.length === 0 ? (
+            {units.length === 0 ? (
               <div className="p-8 text-center rounded-card border border-dashed border-border-subtle bg-white/[0.01]">
                 <p className="text-sm font-semibold text-foreground">No units found in this subject</p>
-                <p className="text-xs text-foreground-muted mt-1 mb-4">
-                  Import past papers or add your syllabus units manually.
+                <p className="text-xs text-foreground-muted mt-1">
+                  Questions have not been assigned to units yet.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setIsImportModalOpen(true)}
-                  className="w-full sm:w-auto px-5 py-3 min-h-[44px] rounded-btn bg-white text-black text-xs sm:text-sm font-bold hover:bg-neutral-200"
-                >
-                  Import Past Papers
-                </button>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {subjectUnits.map((u) => {
-                  const unitQuestions = subjectQuestions.filter((q) => q.unitId === u.id);
+                {units.map((u) => {
+                  const unitQuestions = questions.filter((q) => q.unitId === u.id);
                   return (
                     <UnitCard
                       key={u.id}
@@ -362,87 +277,6 @@ export default function SubjectPage() {
           </div>
         </>
       )}
-
-      {/* Add Unit Modal */}
-      {isAddUnitOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="w-full max-w-sm rounded-card border border-border-subtle bg-surface p-5 sm:p-6 shadow-card space-y-4">
-            <h3 className="text-base font-bold text-foreground">Add New Unit</h3>
-            <form onSubmit={handleAddUnit} className="space-y-4">
-              <div>
-                <label className="text-xs font-mono text-foreground-muted block mb-1.5">
-                  Unit Number:
-                </label>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setNewUnitNumber((prev) => Math.max(0, prev - 1))}
-                    disabled={newUnitNumber <= 0}
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 active:scale-95 disabled:opacity-30 disabled:pointer-events-none text-foreground transition-all"
-                    aria-label="Decrease unit number"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-
-                  <div className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] rounded-btn border border-border-subtle bg-black px-3 select-none">
-                    <span className="font-mono text-sm font-bold text-foreground">
-                      {newUnitNumber === 0 ? "0 (Unsorted)" : `Unit ${newUnitNumber}`}
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setNewUnitNumber((prev) => Math.min(30, prev + 1))}
-                    disabled={newUnitNumber >= 30}
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 active:scale-95 disabled:opacity-30 disabled:pointer-events-none text-foreground transition-all"
-                    aria-label="Increase unit number"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-mono text-foreground-muted block mb-1.5">
-                  Unit Title:
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Normalization & Decomposition"
-                  value={newUnitTitle}
-                  onChange={(e) => setNewUnitTitle(e.target.value)}
-                  className="w-full rounded-btn border border-border-subtle bg-black px-3.5 py-2.5 min-h-[44px] text-base sm:text-xs text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAddUnitOpen(false)}
-                  className="px-4 py-2.5 min-h-[44px] text-xs font-medium text-foreground-secondary hover:text-foreground rounded-btn hover:bg-white/5 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 min-h-[44px] rounded-btn bg-white text-black text-xs font-bold hover:bg-neutral-200 active:scale-[0.98] transition-all shadow-sm"
-                >
-                  Create Unit
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Import Modal */}
-      <ImportModal
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        subject={subject}
-        units={subjectUnits}
-      />
     </div>
   );
 }

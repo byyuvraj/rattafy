@@ -1,0 +1,54 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Subject {
+  id        String   @id @default(cuid())
+  name      String
+  syllabus  String?
+  createdAt DateTime @default(now())
+
+  units     Unit[]
+  questions Question[]
+
+  @@map("subjects")
+}
+
+model Unit {
+  id        String   @id @default(cuid())
+  subjectId String
+  number    Int
+  title     String
+
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  questions Question[]
+
+  @@unique([subjectId, number])
+  @@map("units")
+}
+
+model Question {
+  id          String   @id @default(cuid())
+  subjectId   String
+  unitId      String
+  question    String
+  answer      String
+  marks       Int?
+  years       String   @default("[]")
+  exams       String   @default("[]")
+  repeatCount Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  unit        Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@index([subjectId])
+  @@index([unitId])
+  @@map("questions")
+}

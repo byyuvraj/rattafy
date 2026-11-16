@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, Minus, BookOpen, Layers } from "lucide-react";
-import { db } from "@/lib/db";
-import { generateId } from "@/lib/utils";
-import { Subject, Unit } from "@/types";
+import { X, Plus, Minus, BookOpen } from "lucide-react";
 import { useDialog } from "@/components/ui/DialogProvider";
 
 interface AddSubjectModalProps {
@@ -31,38 +28,25 @@ export default function AddSubjectModal({
 
     setIsSubmitting(true);
     try {
-      const subjectId = generateId();
-      const now = Date.now();
-
-      const newSubject: Subject = {
-        id: subjectId,
-        name: name.trim(),
-        createdAt: now,
-        syllabus: syllabus.trim() || undefined,
-      };
-
-      // Create default units
-      const initialUnits: Unit[] = [];
-      for (let i = 1; i <= unitCount; i++) {
-        initialUnits.push({
-          id: generateId(),
-          subjectId,
-          number: i,
-          title: `Unit ${i}`,
-        });
-      }
-
-      await db.transaction("rw", db.subjects, db.units, async () => {
-        await db.subjects.add(newSubject);
-        if (initialUnits.length > 0) {
-          await db.units.bulkAdd(initialUnits);
-        }
+      const res = await fetch("/api/subjects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          initialUnits: unitCount,
+          syllabus: syllabus.trim() || undefined,
+        }),
       });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to create subject");
+      }
 
       setName("");
       setSyllabus("");
       onClose();
-      onSubjectAdded?.(subjectId);
+      onSubjectAdded?.(data.id);
     } catch (err: any) {
       await alert({
         title: "Creation Error",
@@ -167,7 +151,7 @@ export default function AddSubjectModal({
 
             <div>
               <label className="text-xs font-medium text-foreground-secondary block mb-1.5">
-                Syllabus Outline (Optional for AI classification)
+                Course / Syllabus Notes (Optional)
               </label>
               <textarea
                 rows={3}
@@ -191,7 +175,7 @@ export default function AddSubjectModal({
                 disabled={isSubmitting || !name.trim()}
                 className="px-5 py-2.5 min-h-[44px] rounded-btn bg-white text-black text-xs font-bold hover:bg-neutral-200 active:scale-[0.98] transition-all disabled:opacity-40 flex items-center justify-center"
               >
-                Create Subject
+                {isSubmitting ? "Creating..." : "Create Subject"}
               </button>
             </div>
           </form>

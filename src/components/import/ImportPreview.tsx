@@ -9,18 +9,14 @@ import {
 import {
   ChevronDown,
   ChevronRight,
-  Sparkles,
   Clock,
   Award,
   Trash2,
   Edit2,
   Check,
-  X,
   FileText,
   Loader2,
 } from "lucide-react";
-import { autoAssignUnits, generateAnswerForQuestion } from "@/lib/gemini";
-import { getApiKey, getSelectedModel } from "@/lib/storage";
 import { useDialog } from "@/components/ui/DialogProvider";
 
 interface ImportPreviewProps {
@@ -34,13 +30,12 @@ interface ImportPreviewProps {
 
 export default function ImportPreview({
   groups,
-  existingUnits,
-  subjectName,
+  subjectName: _subjectName,
   onUpdateGroups,
   onConfirm,
   isSaving = false,
 }: ImportPreviewProps) {
-  const { confirm, alert } = useDialog();
+  const { confirm } = useDialog();
   const [expandedUnits, setExpandedUnits] = useState<Record<number, boolean>>({ 0: true, 1: true });
   const [editingQuestion, setEditingQuestion] = useState<{
     unitIndex: number;
@@ -52,20 +47,11 @@ export default function ImportPreview({
     unitNumber: number;
   } | null>(null);
 
-  const [isAssigningUnits, setIsAssigningUnits] = useState(false);
-  const [isGeneratingAnswers, setIsGeneratingAnswers] = useState(false);
-  const [generatingQIndex, setGeneratingQIndex] = useState<string | null>(null);
-
   const toggleUnit = (num: number) => {
     setExpandedUnits((prev) => ({ ...prev, [num]: !prev[num] }));
   };
 
   const totalQuestions = groups.reduce((acc, g) => acc + g.questions.length, 0);
-  const unsortedGroup = groups.find((g) => g.unitNumber === 0);
-  const unsortedCount = unsortedGroup ? unsortedGroup.questions.length : 0;
-  const questionsWithoutAnswer = groups
-    .flatMap((g) => g.questions)
-    .filter((q) => !q.answer || !q.answer.trim()).length;
 
   const handleStartEdit = (uIdx: number, qIdx: number) => {
     const q = groups[uIdx].questions[qIdx];
@@ -99,9 +85,7 @@ export default function ImportPreview({
 
     // If unit changed
     if (unitNumber !== newGroups[unitIndex].unitNumber) {
-      // Remove from current group
       newGroups[unitIndex].questions.splice(qIndex, 1);
-      // Find or create target group
       let destGroup = newGroups.find((g) => g.unitNumber === unitNumber);
       if (!destGroup) {
         destGroup = {
@@ -116,7 +100,6 @@ export default function ImportPreview({
       newGroups[unitIndex].questions[qIndex] = targetQ;
     }
 
-    // Clean empty groups
     const filtered = newGroups.filter((g) => g.questions.length > 0);
     onUpdateGroups(filtered);
     setEditingQuestion(null);
@@ -137,154 +120,6 @@ export default function ImportPreview({
     onUpdateGroups(filtered);
   };
 
-  // Auto-assign unsorted questions with Gemini
-  const handleAutoAssign = async () => {
-    const apiKey = getApiKey();
-    if (!apiKey) {
-      await alert({
-        title: "Gemini Key Required",
-        message: "Please provide a Gemini API key in Settings to use unit auto-assignment.",
-        variant: "warning",
-      });
-      return;
-    }
-
-    if (!unsortedGroup || unsortedGroup.questions.length === 0) return;
-
-    setIsAssigningUnits(true);
-    try {
-      const unitTargets = existingUnits.length > 0
-        ? existingUnits.map((u) => ({ number: u.number, title: u.title }))
-        : groups
-            .filter((g) => g.unitNumber !== 0)
-            .map((g) => ({ number: g.unitNumber, title: g.unitTitle }));
-
-      if (unitTargets.length === 0) {
-        await alert({
-          title: "Unit Targets Required",
-          message: "Please add at least one named unit to classify questions into.",
-          variant: "info",
-        });
-        setIsAssigningUnits(false);
-        return;
-      }
-
-      const assigned = await autoAssignUnits(
-        apiKey,
-        getSelectedModel(),
-        unsortedGroup.questions.map((q) => ({ question: q.question })),
-        unitTargets
-      );
-
-      const newGroups = groups.filter((g) => g.unitNumber !== 0);
-
-      unsortedGroup.questions.forEach((q, idx) => {
-        const assignment = assigned[idx] || { unitNumber: unitTargets[0].number, unitTitle: unitTargets[0].title };
-        let targetGroup = newGroups.find((g) => g.unitNumber === assignment.unitNumber);
-        if (!targetGroup) {
-          targetGroup = {
-            unitNumber: assignment.unitNumber,
-            unitTitle: assignment.unitTitle || `Unit ${assignment.unitNumber}`,
-            questions: [],
-          };
-          newGroups.push(targetGroup);
-        }
-        targetGroup.questions.push({
-          ...q,
-          unitNumber: assignment.unitNumber,
-          unitTitle: assignment.unitTitle,
-        });
-      });
-
-      onUpdateGroups(newGroups.sort((a, b) => a.unitNumber - b.unitNumber));
-    } catch (err: any) {
-      await alert({
-        title: "Auto-Assignment Failed",
-        message: err.message,
-        variant: "danger",
-      });
-    } finally {
-      setIsAssigningUnits(false);
-    }
-  };
-
-  // Bulk generate answers for questions with empty answers
-  const handleBulkGenerateAnswers = async () => {
-    const apiKey = getApiKey();
-    if (!apiKey) {
-      await alert({
-        title: "Gemini Key Required",
-        message: "Please configure a Gemini API Key in Settings to generate AI answers.",
-        variant: "warning",
-      });
-      return;
-    }
-
-    setIsGeneratingAnswers(true);
-    try {
-      const newGroups = JSON.parse(JSON.stringify(groups)) as ParsedUnitGroup[];
-      const model = getSelectedModel();
-
-      for (const group of newGroups) {
-        for (const q of group.questions) {
-          if (!q.answer || !q.answer.trim()) {
-            setGeneratingQIndex(q.question);
-            const ans = await generateAnswerForQuestion(apiKey, model, q.question, q.marks, subjectName);
-            q.answer = ans;
-            q.aiGenerated = true;
-          }
-        }
-      }
-
-      onUpdateGroups(newGroups);
-    } catch (err: any) {
-      await alert({
-        title: "Answer Generation Error",
-        message: err.message,
-        variant: "danger",
-      });
-    } finally {
-      setIsGeneratingAnswers(false);
-      setGeneratingQIndex(null);
-    }
-  };
-
-  // Single question answer generation
-  const handleSingleGenerateAnswer = async (uIdx: number, qIdx: number) => {
-    const apiKey = getApiKey();
-    if (!apiKey) {
-      await alert({
-        title: "Gemini Key Required",
-        message: "Please configure a Gemini API Key in Settings to generate answers.",
-        variant: "warning",
-      });
-      return;
-    }
-
-    const q = groups[uIdx].questions[qIdx];
-    const keyId = `${uIdx}-${qIdx}`;
-    setGeneratingQIndex(keyId);
-
-    try {
-      const ans = await generateAnswerForQuestion(apiKey, getSelectedModel(), q.question, q.marks, subjectName);
-      const newGroups = [...groups];
-      newGroups[uIdx].questions[qIdx] = {
-        ...q,
-        answer: ans,
-        aiGenerated: true,
-      };
-      onUpdateGroups(newGroups);
-    } catch (err: any) {
-      await alert({
-        title: "Answer Generation Error",
-        message: err.message,
-        variant: "danger",
-      });
-    } finally {
-      setGeneratingQIndex(null);
-    }
-  };
-
   return (
     <div className="space-y-6">
       {/* Summary Header */}
@@ -298,44 +133,12 @@ export default function ImportPreview({
             </span>
           </div>
           <p className="text-xs text-foreground-secondary">
-            Structured into {groups.length} units. Review, edit, or auto-assign before confirming.
+            Structured into {groups.length} units. Review, edit, or adjust units before confirming.
           </p>
         </div>
 
         {/* Action Controls */}
-        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2">
-          {unsortedCount > 0 && (
-            <button
-              type="button"
-              onClick={handleAutoAssign}
-              disabled={isAssigningUnits}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[44px] rounded-btn bg-white/5 border border-white/10 hover:border-accent-blue/40 text-xs font-medium text-foreground hover:text-accent-blue transition-all disabled:opacity-50"
-            >
-              {isAssigningUnits ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4 text-accent-blue" />
-              )}
-              Auto-assign Unsorted ({unsortedCount})
-            </button>
-          )}
-
-          {questionsWithoutAnswer > 0 && (
-            <button
-              type="button"
-              onClick={handleBulkGenerateAnswers}
-              disabled={isGeneratingAnswers}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[44px] rounded-btn bg-white/5 border border-white/10 hover:border-accent-blue/40 text-xs font-medium text-foreground hover:text-accent-blue transition-all disabled:opacity-50"
-            >
-              {isGeneratingAnswers ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4 text-amber-400" />
-              )}
-              Generate {questionsWithoutAnswer} Answers
-            </button>
-          )}
-
+        <div className="flex items-center gap-2">
           <button
             type="button"
             disabled={isSaving || totalQuestions === 0}
@@ -389,8 +192,6 @@ export default function ImportPreview({
                       editingQuestion &&
                       editingQuestion.unitIndex === uIdx &&
                       editingQuestion.qIndex === qIdx;
-                    const keyId = `${uIdx}-${qIdx}`;
-                    const isCurrentGenerating = generatingQIndex === keyId;
 
                     return (
                       <div key={qIdx} className="p-4 hover:bg-white/[0.01] transition-colors">
@@ -507,12 +308,6 @@ export default function ImportPreview({
                                     {q.years.join(", ")}
                                   </span>
                                 )}
-                                {q.aiGenerated && (
-                                  <span className="inline-flex items-center gap-1 font-mono text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">
-                                    <Sparkles className="h-3 w-3" />
-                                    AI-Generated
-                                  </span>
-                                )}
                               </div>
 
                               {/* Question title */}
@@ -526,22 +321,7 @@ export default function ImportPreview({
                                   {q.answer.substring(0, 150)}...
                                 </p>
                               ) : (
-                                <div className="flex items-center gap-2 pt-1">
-                                  <span className="text-[11px] text-amber-400 italic">No answer provided</span>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSingleGenerateAnswer(uIdx, qIdx)}
-                                    disabled={isCurrentGenerating}
-                                    className="inline-flex items-center gap-1 text-xs text-accent-blue hover:underline py-1.5 min-h-[36px]"
-                                  >
-                                    {isCurrentGenerating ? (
-                                      <Loader2 className="h-3 w-3 animate-spin" />
-                                    ) : (
-                                      <Sparkles className="h-3 w-3" />
-                                    )}
-                                    Generate with Gemini
-                                  </button>
-                                </div>
+                                <span className="text-[11px] text-neutral-500 italic">No answer provided</span>
                               )}
                             </div>
 

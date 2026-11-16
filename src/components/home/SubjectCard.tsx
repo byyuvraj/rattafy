@@ -2,23 +2,24 @@
 
 import Link from "next/link";
 import { Subject, Unit, Question } from "@/types";
-import { BookOpen, ChevronRight, Layers, Star } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { formatPercent } from "@/lib/utils";
 
 interface SubjectCardProps {
   subject: Subject;
-  units: Unit[];
-  questions: Question[];
+  units?: Unit[];
+  questions?: Question[];
 }
 
 export default function SubjectCard({
   subject,
-  units,
-  questions,
+  units = [],
+  questions = [],
 }: SubjectCardProps) {
-  const total = questions.length;
+  const total = questions.length > 0 ? questions.length : (subject.questionsCount ?? 0);
+  const unitsCount = units.length > 0 ? units.length : (subject.unitsCount ?? 0);
   const known = questions.filter((q) => q.status === "known").length;
-  const percent = formatPercent(known, total);
+  const percent = total > 0 ? formatPercent(known, total) : 0;
 
   // SVG Circular progress ring calculations
   const radius = 24;
@@ -35,7 +36,7 @@ export default function SubjectCard({
         <div className="space-y-2 flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-xs text-foreground-muted font-mono">
-              {units.length} {units.length === 1 ? "unit" : "units"}
+              {unitsCount} {unitsCount === 1 ? "unit" : "units"}
             </span>
           </div>
 
@@ -44,7 +45,8 @@ export default function SubjectCard({
           </h3>
 
           <p className="text-xs text-foreground-secondary font-mono">
-            {total} {total === 1 ? "question" : "questions"} total • {known} known
+            {total} {total === 1 ? "question" : "questions"} total
+            {questions.length > 0 ? ` • ${known} known` : ""}
           </p>
         </div>
 
@@ -85,7 +87,7 @@ export default function SubjectCard({
       {/* Bottom info row */}
       <div className="mt-5 pt-4 border-t border-border-subtle flex items-center justify-end text-xs text-foreground-muted">
         <div className="inline-flex items-center gap-1 text-foreground-secondary group-hover:text-foreground font-medium transition-colors">
-          Open
+          Open Subject
           <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
         </div>
       </div>

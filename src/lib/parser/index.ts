@@ -181,7 +181,6 @@ export function parsePastPaperText(rawText: string): ParseResult {
       years: currentQuestion.years && currentQuestion.years.length > 0 ? currentQuestion.years : [],
       exams: currentQuestion.exams && currentQuestion.exams.length > 0 ? currentQuestion.exams : [],
       repeatCount: currentQuestion.years && currentQuestion.years.length > 1 ? currentQuestion.years.length : 1,
-      aiGenerated: false,
     };
 
     if (!unitGroupsMap.has(currentUnitNum)) {

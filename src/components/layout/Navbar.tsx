@@ -3,25 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { BookOpen, Settings } from "lucide-react";
-import { getApiKey } from "@/lib/storage";
+import { BookOpen, ShieldCheck, Settings } from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const [hasKey, setHasKey] = useState(false);
-
-  useEffect(() => {
-    const key = getApiKey();
-    setHasKey(Boolean(key));
-
-    const handleStorageChange = () => {
-      setHasKey(Boolean(getApiKey()));
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, [pathname]);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border-subtle bg-black/75 backdrop-blur-md transition-colors">
@@ -44,7 +29,7 @@ export default function Navbar() {
         </Link>
 
         {/* Center / Right Nav Items */}
-        <div className="flex items-center gap-1.5 sm:gap-4">
+        <div className="flex items-center gap-1 sm:gap-2">
           <Link
             href="/"
             aria-label="Subjects"
@@ -58,18 +43,17 @@ export default function Navbar() {
             <span className="hidden sm:inline">Subjects</span>
           </Link>
 
-          {/* Gemini Key Status Pill */}
           <Link
-            href="/settings"
-            title={hasKey ? "Gemini API connected" : "Offline mode (No Gemini API key set)"}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 min-h-[44px] rounded-btn bg-white/[0.03] border border-border-subtle text-[11px] font-mono text-foreground-muted hover:border-border-hover transition-colors"
+            href="/admin"
+            aria-label="Admin Portal"
+            className={`inline-flex items-center justify-center gap-1.5 text-xs font-medium px-3 py-2 min-h-[44px] rounded-btn transition-colors ${
+              pathname?.startsWith("/admin")
+                ? "bg-white/10 text-foreground"
+                : "text-foreground-secondary hover:text-foreground hover:bg-white/[0.04]"
+            }`}
           >
-            <span
-              className={`h-2 w-2 rounded-full ${
-                hasKey ? "bg-accent-green shadow-[0_0_8px_#22c55e]" : "bg-neutral-600"
-              }`}
-            />
-            <span className="hidden md:inline">{hasKey ? "Gemini Ready" : "Offline Mode"}</span>
+            <ShieldCheck className="h-4 w-4" />
+            <span className="hidden sm:inline">Admin</span>
           </Link>
 
           <Link
