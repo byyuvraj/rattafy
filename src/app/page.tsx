@@ -56,9 +56,7 @@ export default function HomePage() {
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-foreground leading-[1.1]">
-            Stop scrolling 100-page Word docs.
-            <br />
-            <span className="text-foreground-secondary">Master past papers by unit.</span>
+            Master past papers by unit.
           </h1>
 
           <p className="text-sm sm:text-base text-foreground-secondary leading-relaxed max-w-2xl">
