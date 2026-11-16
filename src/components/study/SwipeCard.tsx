@@ -54,14 +54,13 @@ export default function SwipeCard({
 
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const isDraggingRef = useRef(false);
-  const swipeHandledRef = useRef(false);
+  const lastSwipeTimeRef = useRef(0);
 
   // Reset motion values cleanly when question changes
   useEffect(() => {
     x.set(0);
     y.set(0);
     isDraggingRef.current = false;
-    swipeHandledRef.current = false;
   }, [question.id, x, y]);
 
   // Unified swipe evaluation for both Framer Motion drag and native touch events
@@ -71,7 +70,11 @@ export default function SwipeCard({
     velocityX: number,
     velocityY: number
   ) => {
-    if (swipeHandledRef.current) return;
+    const now = Date.now();
+    // Enforce 450ms cooldown between swipes to eliminate any duplicate event triggers
+    if (now - lastSwipeTimeRef.current < 450) {
+      return;
+    }
 
     const absX = Math.abs(offsetX);
     const absY = Math.abs(offsetY);
@@ -80,13 +83,13 @@ export default function SwipeCard({
     if (absX >= absY) {
       // Swiped Left -> Next Card
       if (offsetX < -40 || (offsetX < -15 && velocityX < -200) || velocityX < -400) {
-        swipeHandledRef.current = true;
+        lastSwipeTimeRef.current = now;
         onSwipeNext();
         return;
       }
       // Swiped Right -> Previous Card
       if (offsetX > 40 || (offsetX > 15 && velocityX > 200) || velocityX > 400) {
-        swipeHandledRef.current = true;
+        lastSwipeTimeRef.current = now;
         onSwipePrev();
         return;
       }
@@ -94,13 +97,13 @@ export default function SwipeCard({
       // Dominant vertical intent (mark status)
       // Swiped Up -> Mark Known
       if (offsetY < -50 || (offsetY < -20 && velocityY < -200)) {
-        swipeHandledRef.current = true;
+        lastSwipeTimeRef.current = now;
         onMarkKnown();
         return;
       }
       // Swiped Down -> Revise Again
       if (offsetY > 50 || (offsetY > 20 && velocityY > 200)) {
-        swipeHandledRef.current = true;
+        lastSwipeTimeRef.current = now;
         onMarkRevise();
         return;
       }
@@ -116,7 +119,6 @@ export default function SwipeCard({
       time: Date.now(),
     };
     isDraggingRef.current = false;
-    swipeHandledRef.current = false;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -152,7 +154,6 @@ export default function SwipeCard({
   // Framer Motion drag handlers
   const handleDragStart = () => {
     isDraggingRef.current = true;
-    swipeHandledRef.current = false;
   };
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {

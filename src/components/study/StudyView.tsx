@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Question, Unit, Subject } from "@/types";
 import { db } from "@/lib/db";
@@ -111,20 +111,37 @@ export default function StudyView({
   const knownCount = questions.filter((q) => q.status === "known").length;
   const progressPercent = questions.length > 0 ? Math.round((knownCount / questions.length) * 100) : 0;
 
+  // Throttle navigation to prevent skipping questions on fast or duplicated events
+  const lastNavTime = useRef<number>(0);
+
   // Navigation handlers
   const handleNext = useCallback(() => {
-    if (currentIndex < filteredQuestions.length - 1) {
-      setCurrentIndex((i) => i + 1);
-      setIsFlipped(false);
-    }
-  }, [currentIndex, filteredQuestions.length]);
+    const now = Date.now();
+    if (now - lastNavTime.current < 350) return;
+    lastNavTime.current = now;
+
+    setCurrentIndex((i) => {
+      if (i < filteredQuestions.length - 1) {
+        setIsFlipped(false);
+        return i + 1;
+      }
+      return i;
+    });
+  }, [filteredQuestions.length]);
 
   const handlePrev = useCallback(() => {
-    if (currentIndex > 0) {
-      setCurrentIndex((i) => i - 1);
-      setIsFlipped(false);
-    }
-  }, [currentIndex]);
+    const now = Date.now();
+    if (now - lastNavTime.current < 350) return;
+    lastNavTime.current = now;
+
+    setCurrentIndex((i) => {
+      if (i > 0) {
+        setIsFlipped(false);
+        return i - 1;
+      }
+      return i;
+    });
+  }, []);
 
   const handleFlip = useCallback(() => {
     setIsFlipped((f) => !f);
@@ -134,6 +151,10 @@ export default function StudyView({
   const handleUpdateStatus = useCallback(
     async (newStatus: "known" | "learning") => {
       if (!activeQuestion) return;
+
+      const now = Date.now();
+      if (now - lastNavTime.current < 350) return;
+      lastNavTime.current = now;
 
       if (newStatus === "known") {
         confetti({
@@ -153,12 +174,16 @@ export default function StudyView({
         prev.map((q) => (q.id === activeQuestion.id ? { ...q, status: newStatus } : q))
       );
 
-      // Auto advance to next card after marking
-      if (currentIndex < filteredQuestions.length - 1) {
-        handleNext();
-      }
+      // Advance exactly one card after marking
+      setCurrentIndex((i) => {
+        if (i < filteredQuestions.length - 1) {
+          setIsFlipped(false);
+          return i + 1;
+        }
+        return i;
+      });
     },
-    [activeQuestion, currentIndex, filteredQuestions.length, handleNext]
+    [activeQuestion, filteredQuestions.length]
   );
 
   const handleToggleStar = useCallback(async () => {
