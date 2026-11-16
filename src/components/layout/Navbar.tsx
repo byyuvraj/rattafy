@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { BookOpen, Settings, Key, Sparkles, Layers } from "lucide-react";
+import { BookOpen, Settings } from "lucide-react";
 import { getApiKey } from "@/lib/storage";
 
 export default function Navbar() {
@@ -25,10 +26,17 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border-subtle bg-black/75 backdrop-blur-md transition-colors">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-        {/* Brand */}
+        {/* Brand with Favicon Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="flex h-8 w-8 items-center justify-center rounded-btn bg-white/10 border border-border-subtle text-foreground group-hover:border-accent-blue/40 group-hover:text-accent-blue transition-colors">
-            <Layers className="h-4 w-4" />
+          <div className="relative flex h-8 w-8 items-center justify-center rounded-btn overflow-hidden border border-border-subtle group-hover:border-accent-blue/40 transition-colors bg-white/5">
+            <Image
+              src="/apple-touch-icon.png"
+              alt="Rattafy Logo"
+              width={32}
+              height={32}
+              className="h-full w-full object-cover"
+              priority
+            />
           </div>
           <div className="flex items-baseline gap-1.5">
             <span className="text-base font-bold tracking-tight text-foreground">Rattafy</span>
