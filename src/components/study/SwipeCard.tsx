@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { Question } from "@/types";
 import {
@@ -49,32 +49,127 @@ export default function SwipeCard({
   const rotate = useTransform(x, [-200, 200], [-10, 10]);
   const opacityKnown = useTransform(y, [-150, -30], [1, 0]);
   const opacityRevise = useTransform(y, [30, 150], [0, 1]);
-  const opacityNext = useTransform(x, [-150, -30], [1, 0]);
-  const opacityPrev = useTransform(x, [30, 150], [0, 1]);
+  const opacityNext = useTransform(x, [-120, -20], [1, 0]);
+  const opacityPrev = useTransform(x, [20, 120], [0, 1]);
+
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const isDraggingRef = useRef(false);
+  const swipeHandledRef = useRef(false);
+
+  // Reset motion values cleanly when question changes
+  useEffect(() => {
+    x.set(0);
+    y.set(0);
+    isDraggingRef.current = false;
+    swipeHandledRef.current = false;
+  }, [question.id, x, y]);
+
+  // Unified swipe evaluation for both Framer Motion drag and native touch events
+  const resolveSwipe = (
+    offsetX: number,
+    offsetY: number,
+    velocityX: number,
+    velocityY: number
+  ) => {
+    if (swipeHandledRef.current) return;
+
+    const absX = Math.abs(offsetX);
+    const absY = Math.abs(offsetY);
+
+    // Dominant horizontal intent (card navigation)
+    if (absX >= absY) {
+      // Swiped Left -> Next Card
+      if (offsetX < -40 || (offsetX < -15 && velocityX < -200) || velocityX < -400) {
+        swipeHandledRef.current = true;
+        onSwipeNext();
+        return;
+      }
+      // Swiped Right -> Previous Card
+      if (offsetX > 40 || (offsetX > 15 && velocityX > 200) || velocityX > 400) {
+        swipeHandledRef.current = true;
+        onSwipePrev();
+        return;
+      }
+    } else {
+      // Dominant vertical intent (mark status)
+      // Swiped Up -> Mark Known
+      if (offsetY < -50 || (offsetY < -20 && velocityY < -200)) {
+        swipeHandledRef.current = true;
+        onMarkKnown();
+        return;
+      }
+      // Swiped Down -> Revise Again
+      if (offsetY > 50 || (offsetY > 20 && velocityY > 200)) {
+        swipeHandledRef.current = true;
+        onMarkRevise();
+        return;
+      }
+    }
+  };
+
+  // Native touch handlers to guarantee mobile gestures work 100% of the time
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    touchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+      time: Date.now(),
+    };
+    isDraggingRef.current = false;
+    swipeHandledRef.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartRef.current || e.touches.length !== 1) return;
+    const deltaX = e.touches[0].clientX - touchStartRef.current.x;
+    const deltaY = e.touches[0].clientY - touchStartRef.current.y;
+
+    if (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6) {
+      isDraggingRef.current = true;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current || e.changedTouches.length === 0) return;
+
+    const deltaX = e.changedTouches[0].clientX - touchStartRef.current.x;
+    const deltaY = e.changedTouches[0].clientY - touchStartRef.current.y;
+    const elapsed = Math.max(1, Date.now() - touchStartRef.current.time);
+    const velocityX = (deltaX / elapsed) * 1000; // px/sec
+    const velocityY = (deltaY / elapsed) * 1000; // px/sec
+
+    touchStartRef.current = null;
+
+    if (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6) {
+      setTimeout(() => {
+        isDraggingRef.current = false;
+      }, 120);
+
+      resolveSwipe(deltaX, deltaY, velocityX, velocityY);
+    }
+  };
+
+  // Framer Motion drag handlers
+  const handleDragStart = () => {
+    isDraggingRef.current = true;
+    swipeHandledRef.current = false;
+  };
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const thresholdX = 100;
-    const thresholdY = 90;
+    setTimeout(() => {
+      isDraggingRef.current = false;
+    }, 120);
 
-    // Check vertical swipes first (Known / Revise)
-    if (info.offset.y < -thresholdY) {
-      onMarkKnown();
-      return;
-    }
-    if (info.offset.y > thresholdY) {
-      onMarkRevise();
-      return;
-    }
+    resolveSwipe(info.offset.x, info.offset.y, info.velocity.x, info.velocity.y);
+  };
 
-    // Check horizontal swipes (Next / Prev)
-    if (info.offset.x < -thresholdX) {
-      onSwipeNext();
+  // Guard click-to-flip against drag/swipe releases
+  const handleMiddleClick = () => {
+    if (isDraggingRef.current) {
+      isDraggingRef.current = false;
       return;
     }
-    if (info.offset.x > thresholdX) {
-      onSwipePrev();
-      return;
-    }
+    onFlip();
   };
 
   return (
@@ -105,12 +200,16 @@ export default function SwipeCard({
 
       {/* Main Interactive Card */}
       <motion.div
-        style={{ x, y, rotate }}
+        style={{ x, y, rotate, touchAction: "none" }}
         drag
         dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-        dragElastic={0.65}
+        dragElastic={0.45}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
-        className="relative w-full h-full cursor-grab active:cursor-grabbing z-10"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="relative w-full h-full cursor-grab active:cursor-grabbing z-10 touch-none select-none"
       >
         {/* Swipe Feedback Overlay Badges */}
         <motion.div
@@ -221,8 +320,8 @@ export default function SwipeCard({
 
           {/* Card Middle: Question & Answer (Scrollable container for long answers) */}
           <div
-            onClick={onFlip}
-            className="flex-1 my-3 overflow-y-auto pr-1 flex flex-col justify-start cursor-pointer scroll-touch"
+            onClick={handleMiddleClick}
+            className="flex-1 my-3 overflow-y-auto pr-1 flex flex-col justify-start cursor-pointer scroll-touch touch-pan-y"
           >
             {/* Question Text */}
             <div className="space-y-3 mb-4">
