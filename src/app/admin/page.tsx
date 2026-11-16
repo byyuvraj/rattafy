@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Subject, Unit, Question } from "@/types";
 import AddSubjectModal from "@/components/home/AddSubjectModal";
+import EditSubjectModal from "@/components/home/EditSubjectModal";
 import ImportModal from "@/components/import/ImportModal";
 import { useDialog } from "@/components/ui/DialogProvider";
 import {
@@ -19,6 +20,7 @@ import {
   Loader2,
   ExternalLink,
   Edit2,
+  Edit3,
   Check,
   X,
 } from "lucide-react";
@@ -40,6 +42,7 @@ export default function AdminPage() {
     units: Unit[];
   } | null>(null);
   const [isAddSubjectOpen, setIsAddSubjectOpen] = useState(false);
+  const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
 
   // Expanded subject details (units & questions)
   const [expandedSubjectId, setExpandedSubjectId] = useState<string | null>(null);
@@ -466,6 +469,15 @@ export default function AdminPage() {
                         Import Papers
                       </button>
 
+                      <button
+                        type="button"
+                        onClick={() => setEditingSubject(sub)}
+                        className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-btn text-foreground-secondary hover:text-foreground hover:bg-white/5 transition-colors"
+                        title="Edit subject details"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </button>
+
                       <Link
                         href={`/subject/${sub.id}`}
                         target="_blank"
@@ -495,6 +507,32 @@ export default function AdminPage() {
                         </div>
                       ) : subjectDetails ? (
                         <div className="space-y-6">
+                          {/* Subject Meta & Quick Edit Row */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-border-subtle/60">
+                            <div className="text-xs text-foreground-muted font-mono flex items-center gap-2 flex-wrap">
+                              {sub.code && (
+                                <span className="font-bold text-accent-blue bg-accent-blue/10 px-2 py-0.5 rounded border border-accent-blue/20">
+                                  {sub.code}
+                                </span>
+                              )}
+                              {sub.branch && <span className="text-foreground-secondary">{sub.branch}</span>}
+                              {sub.year && <span>• {sub.year}</span>}
+                              {sub.syllabus && (
+                                <span className="italic text-[11px] truncate max-w-xs text-foreground-muted">
+                                  Notes configured
+                                </span>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setEditingSubject(sub)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-btn bg-white/5 hover:bg-white/10 text-foreground hover:text-white border border-border-subtle transition-colors"
+                            >
+                              <Edit3 className="h-3.5 w-3.5 text-accent-blue" />
+                              Edit Subject Info
+                            </button>
+                          </div>
+
                           {/* Units List */}
                           <div className="space-y-3">
                             <div className="flex items-center justify-between">
@@ -693,6 +731,19 @@ export default function AdminPage() {
         isOpen={isAddSubjectOpen}
         onClose={() => setIsAddSubjectOpen(false)}
         onSubjectAdded={() => loadSubjects()}
+      />
+
+      {/* Edit Subject Modal */}
+      <EditSubjectModal
+        isOpen={Boolean(editingSubject)}
+        onClose={() => setEditingSubject(null)}
+        subject={editingSubject}
+        onSubjectUpdated={() => {
+          loadSubjects();
+          if (expandedSubjectId && editingSubject && expandedSubjectId === editingSubject.id) {
+            loadSubjectDetails(editingSubject.id);
+          }
+        }}
       />
 
       {/* Import Modal */}
