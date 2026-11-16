@@ -29,7 +29,7 @@ export default function SubjectCard({
   return (
     <Link
       href={`/subject/${subject.id}`}
-      className="group block rounded-card border border-border-subtle bg-surface hover:border-border-hover p-6 transition-all duration-200 shadow-sm hover:shadow-card relative overflow-hidden"
+      className="group block rounded-card border border-border-subtle bg-surface hover:border-border-hover p-5 sm:p-6 transition-all duration-200 shadow-sm hover:shadow-card relative overflow-hidden"
     >
       <div className="flex items-start justify-between gap-4">
         {/* Subject Info */}

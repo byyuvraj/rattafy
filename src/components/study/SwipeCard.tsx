@@ -78,7 +78,7 @@ export default function SwipeCard({
   };
 
   return (
-    <div className="relative w-full max-w-2xl mx-auto h-[540px] sm:h-[580px] perspective-1000 select-none">
+    <div className="relative w-full max-w-2xl mx-auto h-[calc(100dvh-175px)] sm:h-[560px] max-h-[640px] min-h-[420px] perspective-1000 select-none">
       {/* Background Peek Card */}
       {nextQuestionPreview && (
         <div
@@ -190,7 +190,7 @@ export default function SwipeCard({
                   onOpenNotes();
                 }}
                 title={question.notes ? "View revision note" : "Add revision note (N)"}
-                className={`p-1.5 rounded-btn transition-colors ${
+                className={`p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-btn transition-colors ${
                   question.notes
                     ? "text-accent-blue bg-accent-blue/10"
                     : "text-foreground-muted hover:text-foreground hover:bg-white/5"
@@ -206,7 +206,7 @@ export default function SwipeCard({
                   onToggleStar();
                 }}
                 title="Star question (S)"
-                className={`p-1.5 rounded-btn transition-colors ${
+                className={`p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-btn transition-colors ${
                   question.starred
                     ? "text-accent-gold fill-accent-gold"
                     : "text-foreground-muted hover:text-foreground hover:bg-white/5"
@@ -222,7 +222,7 @@ export default function SwipeCard({
           {/* Card Middle: Question & Answer (Scrollable container for long answers) */}
           <div
             onClick={onFlip}
-            className="flex-1 my-3 overflow-y-auto pr-1 flex flex-col justify-start cursor-pointer"
+            className="flex-1 my-3 overflow-y-auto pr-1 flex flex-col justify-start cursor-pointer scroll-touch"
           >
             {/* Question Text */}
             <div className="space-y-3 mb-4">
@@ -290,10 +290,10 @@ export default function SwipeCard({
                 onMarkRevise();
               }}
               title="Revise Again (R / Swipe Down)"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-btn text-xs font-medium bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 transition-all active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-3 min-h-[48px] rounded-btn text-xs sm:text-sm font-semibold bg-amber-500/10 border border-amber-500/25 text-amber-400 hover:bg-amber-500/20 transition-all active:scale-[0.98] flex-1"
             >
-              <RotateCcw className="h-3.5 w-3.5" />
-              <span>Revise (R)</span>
+              <RotateCcw className="h-4 w-4 shrink-0" />
+              <span>Revise</span>
             </button>
 
             <button
@@ -302,9 +302,9 @@ export default function SwipeCard({
                 e.stopPropagation();
                 onFlip();
               }}
-              className="inline-flex items-center gap-1 text-xs text-foreground-secondary hover:text-foreground px-2.5 py-1 rounded hover:bg-white/5 transition-colors font-mono"
+              className="inline-flex items-center justify-center gap-1 text-xs text-foreground-secondary hover:text-foreground px-3.5 py-3 min-h-[48px] rounded-btn hover:bg-white/5 transition-colors font-mono shrink-0 border border-transparent hover:border-border-subtle"
             >
-              <CornerDownLeft className="h-3 w-3" />
+              <CornerDownLeft className="h-3.5 w-3.5" />
               {isFlipped ? "Hide" : "Flip"}
             </button>
 
@@ -315,10 +315,10 @@ export default function SwipeCard({
                 onMarkKnown();
               }}
               title="Mark as Known (K / Swipe Up)"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-btn text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition-all active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-3 min-h-[48px] rounded-btn text-xs sm:text-sm font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition-all active:scale-[0.98] flex-1"
             >
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              <span>Known (K)</span>
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              <span>Known</span>
             </button>
           </div>
         </div>

@@ -97,9 +97,9 @@ export default function AddSubjectModal({
             <button
               type="button"
               onClick={onClose}
-              className="text-foreground-muted hover:text-foreground p-1"
+              className="text-foreground-muted hover:text-foreground p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-btn hover:bg-white/5 transition-colors"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </button>
           </div>
 
@@ -114,7 +114,7 @@ export default function AddSubjectModal({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Operating Systems"
-                className="w-full rounded-btn border border-border-subtle bg-black px-3.5 py-2 text-xs text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none"
+                className="w-full rounded-btn border border-border-subtle bg-black px-3.5 py-2.5 min-h-[44px] text-base sm:text-xs text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none"
               />
             </div>
 
@@ -128,7 +128,7 @@ export default function AddSubjectModal({
                 max={12}
                 value={unitCount}
                 onChange={(e) => setUnitCount(parseInt(e.target.value, 10) || 1)}
-                className="w-full rounded-btn border border-border-subtle bg-black px-3.5 py-2 text-xs font-mono text-foreground focus:border-border-focus focus:outline-none"
+                className="w-full rounded-btn border border-border-subtle bg-black px-3.5 py-2.5 min-h-[44px] text-base sm:text-xs font-mono text-foreground focus:border-border-focus focus:outline-none"
               />
             </div>
 
@@ -141,22 +141,22 @@ export default function AddSubjectModal({
                 value={syllabus}
                 onChange={(e) => setSyllabus(e.target.value)}
                 placeholder="Unit 1: Process Management & CPU Scheduling&#10;Unit 2: Memory Management & Virtual Memory..."
-                className="w-full rounded-btn border border-border-subtle bg-black p-3 text-xs text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none"
+                className="w-full rounded-btn border border-border-subtle bg-black p-3 text-base sm:text-xs text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-border-subtle">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-border-subtle">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-3 py-1.5 text-xs text-foreground-secondary hover:text-foreground"
+                className="px-4 py-2.5 min-h-[44px] text-xs font-medium text-foreground-secondary hover:text-foreground flex items-center justify-center rounded-btn"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting || !name.trim()}
-                className="px-4 py-2 rounded-btn bg-white text-black text-xs font-bold hover:bg-neutral-200 active:scale-[0.98] transition-all disabled:opacity-40"
+                className="px-5 py-2.5 min-h-[44px] rounded-btn bg-white text-black text-xs font-bold hover:bg-neutral-200 active:scale-[0.98] transition-all disabled:opacity-40 flex items-center justify-center"
               >
                 Create Subject
               </button>

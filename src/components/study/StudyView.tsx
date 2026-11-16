@@ -244,13 +244,13 @@ export default function StudyView({
           </div>
 
           {/* Progress Counters & Close */}
-          <div className="flex items-center gap-4 shrink-0">
-            <div className="hidden sm:flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <span className="font-mono text-xs text-foreground-secondary">
-                {currentIndex + 1} / {filteredQuestions.length || 1}
+                {currentIndex + 1}/{filteredQuestions.length || 1}
               </span>
-              <span className="text-xs text-accent-green font-mono font-medium">
-                ({progressPercent}% known)
+              <span className="text-xs text-accent-green font-mono font-medium hidden xs:inline">
+                ({progressPercent}%)
               </span>
             </div>
 
@@ -258,7 +258,7 @@ export default function StudyView({
               type="button"
               onClick={onClose}
               title="Close Study Mode (Esc)"
-              className="p-1.5 rounded-btn text-foreground-secondary hover:text-foreground hover:bg-white/10 transition-colors"
+              className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-btn text-foreground-secondary hover:text-foreground hover:bg-white/10 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
@@ -266,7 +266,7 @@ export default function StudyView({
         </div>
 
         {/* Top Animated Progress Bar */}
-        <div className="w-full h-1 bg-white/[0.06] mt-3 rounded-full overflow-hidden max-w-4xl mx-auto">
+        <div className="w-full h-1 bg-white/[0.06] mt-2 sm:mt-3 rounded-full overflow-hidden max-w-4xl mx-auto">
           <div
             className="h-full bg-accent-blue transition-all duration-300"
             style={{
@@ -281,7 +281,7 @@ export default function StudyView({
       </div>
 
       {/* Filter and Shuffle Toolbar */}
-      <div className="w-full max-w-4xl mx-auto px-4 py-2 shrink-0 flex items-center justify-between gap-2 overflow-x-auto">
+      <div className="w-full max-w-4xl mx-auto px-4 py-2 shrink-0 flex items-center justify-between gap-2 overflow-x-auto scroll-touch">
         <div className="flex items-center gap-1.5">
           <button
             type="button"
@@ -289,7 +289,7 @@ export default function StudyView({
               setActiveFilter("all");
               setCurrentIndex(0);
             }}
-            className={`px-2.5 py-1 rounded-btn text-xs font-mono transition-colors ${
+            className={`px-3 py-1.5 min-h-[38px] flex items-center rounded-btn text-xs font-mono transition-colors shrink-0 ${
               activeFilter === "all"
                 ? "bg-white text-black font-semibold"
                 : "text-foreground-secondary hover:text-foreground hover:bg-white/5"
@@ -304,7 +304,7 @@ export default function StudyView({
               setActiveFilter("unknown");
               setCurrentIndex(0);
             }}
-            className={`px-2.5 py-1 rounded-btn text-xs font-mono transition-colors ${
+            className={`px-3 py-1.5 min-h-[38px] flex items-center rounded-btn text-xs font-mono transition-colors shrink-0 ${
               activeFilter === "unknown"
                 ? "bg-white text-black font-semibold"
                 : "text-foreground-secondary hover:text-foreground hover:bg-white/5"
@@ -319,7 +319,7 @@ export default function StudyView({
               setActiveFilter("starred");
               setCurrentIndex(0);
             }}
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-btn text-xs font-mono transition-colors ${
+            className={`inline-flex items-center gap-1 px-3 py-1.5 min-h-[38px] rounded-btn text-xs font-mono transition-colors shrink-0 ${
               activeFilter === "starred"
                 ? "bg-white text-black font-semibold"
                 : "text-foreground-secondary hover:text-foreground hover:bg-white/5"
@@ -335,7 +335,7 @@ export default function StudyView({
               setActiveFilter("repeated");
               setCurrentIndex(0);
             }}
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-btn text-xs font-mono transition-colors ${
+            className={`inline-flex items-center gap-1 px-3 py-1.5 min-h-[38px] rounded-btn text-xs font-mono transition-colors shrink-0 ${
               activeFilter === "repeated"
                 ? "bg-white text-black font-semibold"
                 : "text-foreground-secondary hover:text-foreground hover:bg-white/5"
@@ -351,7 +351,7 @@ export default function StudyView({
           type="button"
           onClick={handleToggleShuffle}
           title="Toggle Shuffle"
-          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-btn text-xs font-mono transition-colors ${
+          className={`inline-flex items-center gap-1 px-3 py-1.5 min-h-[38px] rounded-btn text-xs font-mono transition-colors shrink-0 ${
             isShuffled
               ? "bg-accent-blue/20 text-accent-blue border border-accent-blue/30"
               : "text-foreground-muted hover:text-foreground hover:bg-white/5"
@@ -396,17 +396,17 @@ export default function StudyView({
       </div>
 
       {/* Bottom Navigation and Keyboard Hints Bar */}
-      <div className="w-full border-t border-border-subtle bg-black/80 backdrop-blur-md px-4 py-2.5 shrink-0">
+      <div className="w-full border-t border-border-subtle bg-black/80 backdrop-blur-md px-4 py-2 sm:py-2.5 shrink-0">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           {/* Previous Button */}
           <button
             type="button"
             disabled={currentIndex === 0}
             onClick={handlePrev}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 text-xs font-mono text-foreground-secondary hover:text-foreground disabled:opacity-30 transition-all"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 text-xs font-mono text-foreground-secondary hover:text-foreground disabled:opacity-30 transition-all active:scale-[0.98]"
           >
             <ChevronLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Previous (←)</span>
+            <span>Prev</span>
           </button>
 
           {/* Desktop Keyboard Hints */}
@@ -423,9 +423,9 @@ export default function StudyView({
             type="button"
             disabled={currentIndex >= filteredQuestions.length - 1}
             onClick={handleNext}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 text-xs font-mono text-foreground-secondary hover:text-foreground disabled:opacity-30 transition-all"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 text-xs font-mono text-foreground-secondary hover:text-foreground disabled:opacity-30 transition-all active:scale-[0.98]"
           >
-            <span className="hidden sm:inline">Next (→)</span>
+            <span>Next</span>
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>

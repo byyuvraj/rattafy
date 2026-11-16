@@ -103,7 +103,7 @@ export default function OverviewMode({
         <button
           type="button"
           onClick={onClose}
-          className="self-start sm:self-auto px-3.5 py-1.5 rounded-btn bg-white/5 border border-border-subtle text-xs font-medium text-foreground hover:bg-white/10"
+          className="self-stretch sm:self-auto px-4 py-2 min-h-[44px] flex items-center justify-center rounded-btn bg-white/5 border border-border-subtle text-xs font-semibold text-foreground hover:bg-white/10 active:scale-[0.98] transition-all"
         >
           Exit Overview
         </button>
@@ -119,12 +119,12 @@ export default function OverviewMode({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search questions, answers, years..."
-            className="w-full pl-10 pr-4 py-2 rounded-btn bg-surface border border-border-subtle text-xs text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none"
+            className="w-full pl-10 pr-4 py-2.5 min-h-[44px] rounded-btn bg-surface border border-border-subtle text-sm sm:text-xs text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none"
           />
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scroll-touch">
           {[
             { id: "all", label: "All" },
             { id: "known", label: "Known" },
@@ -137,7 +137,7 @@ export default function OverviewMode({
               key={pill.id}
               type="button"
               onClick={() => setStatusFilter(pill.id)}
-              className={`px-3 py-1.5 rounded-btn text-xs font-mono transition-colors shrink-0 ${
+              className={`px-3.5 py-2 min-h-[38px] flex items-center rounded-btn text-xs font-mono transition-colors shrink-0 ${
                 statusFilter === pill.id
                   ? "bg-white text-black font-semibold"
                   : "bg-surface border border-border-subtle text-foreground-secondary hover:text-foreground hover:bg-white/5"
@@ -231,7 +231,7 @@ export default function OverviewMode({
                       type="button"
                       onClick={() => handleToggleStar(q)}
                       title="Star"
-                      className={`p-1.5 rounded hover:bg-white/5 transition-colors ${
+                      className={`p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-btn hover:bg-white/5 transition-colors ${
                         q.starred ? "text-amber-400" : "text-foreground-muted"
                       }`}
                     >
@@ -242,7 +242,7 @@ export default function OverviewMode({
                       type="button"
                       onClick={() => handleDelete(q)}
                       title="Delete question"
-                      className="p-1.5 rounded text-foreground-muted hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-btn text-foreground-muted hover:text-red-400 hover:bg-red-500/10 transition-colors"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -255,13 +255,13 @@ export default function OverviewMode({
                     <MarkdownContent content={q.answer} />
 
                     {/* Status change bar */}
-                    <div className="flex items-center justify-between pt-3 border-t border-border-subtle/60 text-xs">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-3 border-t border-border-subtle/60 text-xs">
                       <span className="text-foreground-muted font-mono">Quick Status:</span>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => handleSetStatus(q, "new")}
-                          className={`px-2 py-0.5 rounded font-mono text-[11px] ${
+                          className={`px-3 py-1.5 min-h-[36px] flex items-center justify-center rounded-btn font-mono text-xs ${
                             q.status === "new"
                               ? "bg-white text-black font-semibold"
                               : "text-foreground-secondary hover:bg-white/5"
@@ -272,7 +272,7 @@ export default function OverviewMode({
                         <button
                           type="button"
                           onClick={() => handleSetStatus(q, "learning")}
-                          className={`px-2 py-0.5 rounded font-mono text-[11px] ${
+                          className={`px-3 py-1.5 min-h-[36px] flex items-center justify-center rounded-btn font-mono text-xs ${
                             q.status === "learning"
                               ? "bg-amber-400 text-black font-semibold"
                               : "text-amber-400 hover:bg-amber-400/10"
@@ -283,7 +283,7 @@ export default function OverviewMode({
                         <button
                           type="button"
                           onClick={() => handleSetStatus(q, "known")}
-                          className={`px-2 py-0.5 rounded font-mono text-[11px] ${
+                          className={`px-3 py-1.5 min-h-[36px] flex items-center justify-center rounded-btn font-mono text-xs ${
                             q.status === "known"
                               ? "bg-emerald-400 text-black font-semibold"
                               : "text-emerald-400 hover:bg-emerald-400/10"

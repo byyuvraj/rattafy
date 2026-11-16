@@ -295,7 +295,7 @@ export default function ImportModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-5 overflow-y-auto">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -308,17 +308,17 @@ export default function ImportModal({
           initial={{ opacity: 0, scale: 0.96, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 12 }}
-          className="relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-card border border-border-subtle bg-surface shadow-card modal-glow z-10 overflow-hidden"
+          className="relative w-full max-w-4xl max-h-[95dvh] flex flex-col rounded-card border border-border-subtle bg-surface shadow-card modal-glow z-10 overflow-hidden"
         >
           {/* Modal Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle shrink-0">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-border-subtle shrink-0">
+            <div className="flex items-center gap-2.5 sm:gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-btn bg-white/5 border border-border-subtle text-accent-blue">
                 <Upload className="h-4 w-4" />
               </div>
               <div>
                 <h2 className="text-base font-bold text-foreground">Import Exam Content</h2>
-                <p className="text-xs text-foreground-secondary">
+                <p className="text-xs text-foreground-secondary truncate max-w-[200px] sm:max-w-md">
                   Target: <span className="font-semibold text-foreground">{subject.name}</span>
                 </p>
               </div>
@@ -327,21 +327,21 @@ export default function ImportModal({
             <button
               type="button"
               onClick={handleClose}
-              className="p-1.5 rounded-btn text-foreground-secondary hover:text-foreground hover:bg-white/5 transition-colors"
+              className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-btn text-foreground-secondary hover:text-foreground hover:bg-white/5 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
 
           {/* Modal Body */}
-          <div className="p-6 overflow-y-auto flex-1 space-y-6">
+          <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-6 scroll-touch">
             {parsedGroups ? (
               // Step 2: Preview Screen
               <div>
                 <button
                   type="button"
                   onClick={() => setParsedGroups(null)}
-                  className="text-xs text-foreground-secondary hover:text-foreground underline mb-4 block"
+                  className="text-xs text-foreground-secondary hover:text-foreground underline mb-4 inline-flex items-center gap-1 py-1 min-h-[36px]"
                 >
                   ← Back to Upload / Input
                 </button>
@@ -358,35 +358,35 @@ export default function ImportModal({
               // Step 1: Input Mode Selection & Inputs
               <div className="space-y-6">
                 {/* Tabs */}
-                <div className="grid grid-cols-2 gap-2 p-1 rounded-card bg-black/50 border border-border-subtle">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-1 rounded-card bg-black/50 border border-border-subtle">
                   <button
                     type="button"
                     onClick={() => setActiveTab("text")}
-                    className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-btn text-xs font-semibold transition-all ${
+                    className={`flex items-center justify-center gap-2 py-3 px-3 min-h-[44px] rounded-btn text-xs font-semibold transition-all ${
                       activeTab === "text"
                         ? "bg-white text-black shadow-sm"
                         : "text-foreground-secondary hover:text-foreground hover:bg-white/[0.03]"
                     }`}
                   >
-                    <FileText className="h-4 w-4" />
-                    MODE A: Smart Text Import
-                    <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-neutral-800 text-neutral-300">
-                      No API needed
+                    <FileText className="h-4 w-4 shrink-0" />
+                    <span>MODE A: Smart Text Import</span>
+                    <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-300">
+                      Offline
                     </span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setActiveTab("scan")}
-                    className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-btn text-xs font-semibold transition-all ${
+                    className={`flex items-center justify-center gap-2 py-3 px-3 min-h-[44px] rounded-btn text-xs font-semibold transition-all ${
                       activeTab === "scan"
                         ? "bg-white text-black shadow-sm"
                         : "text-foreground-secondary hover:text-foreground hover:bg-white/[0.03]"
                     }`}
                   >
-                    <Sparkles className="h-4 w-4 text-accent-blue" />
-                    MODE B: Scan with Gemini
-                    <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-accent-blue/20 text-accent-blue">
+                    <Sparkles className="h-4 w-4 text-accent-blue shrink-0" />
+                    <span>MODE B: Scan with Gemini</span>
+                    <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-accent-blue/20 text-accent-blue">
                       Multimodal
                     </span>
                   </button>
@@ -395,14 +395,14 @@ export default function ImportModal({
                 {/* MODE A Content */}
                 {activeTab === "text" && (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <label className="text-xs font-medium text-foreground">
                           Paste past-paper text or upload .txt / .md
                         </label>
                         {liveStats && (
                           <span className="font-mono text-[11px] text-accent-blue bg-accent-blue/10 px-2 py-0.5 rounded-full border border-accent-blue/20">
-                            Detected {liveStats.totalQuestions} questions across {liveStats.unitCount} units
+                            {liveStats.totalQuestions} Qs ({liveStats.unitCount} units)
                           </span>
                         )}
                       </div>
@@ -418,32 +418,24 @@ export default function ImportModal({
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="inline-flex items-center gap-1.5 text-xs text-foreground-secondary hover:text-foreground px-2.5 py-1 rounded bg-white/5 border border-border-subtle hover:border-border-hover transition-colors"
+                          className="inline-flex items-center gap-1.5 text-xs text-foreground-secondary hover:text-foreground px-3 py-2 min-h-[44px] rounded-btn bg-white/5 border border-border-subtle hover:border-border-hover transition-colors"
                         >
-                          <Upload className="h-3 w-3" />
-                          Upload file
+                          <Upload className="h-3.5 w-3.5" />
+                          Upload .txt / .md
                         </button>
                       </div>
                     </div>
 
                     <textarea
-                      rows={12}
+                      rows={10}
                       value={pastedText}
                       onChange={(e) => setPastedText(e.target.value)}
                       placeholder={`Unit 1: Introduction
 Q1. What is a database management system?
 [2023 | MST1 | 5 marks]
 A DBMS is software that stores, retrieves and manages data...
-\`\`\`
-
-Q2. Explain 3-Schema Architecture with diagrams.
-[2022 | EndSem | 10 marks]
-The ANSI/SPARC 3-schema architecture consists of:
-1. Physical level
-2. Logical level
-3. External view level
 \`\`\``}
-                      className="w-full rounded-card border border-border-subtle bg-black p-4 font-mono text-xs text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none transition-colors"
+                      className="w-full rounded-card border border-border-subtle bg-black p-3.5 sm:p-4 font-mono text-base sm:text-xs text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none transition-colors"
                     />
 
                     {/* Format Guidelines Tip */}
@@ -468,7 +460,7 @@ The ANSI/SPARC 3-schema architecture consists of:
                         type="button"
                         disabled={!pastedText.trim()}
                         onClick={handleParseText}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-btn bg-white text-black text-xs font-bold hover:bg-neutral-200 active:scale-[0.98] transition-all disabled:opacity-40"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[48px] rounded-btn bg-white text-black text-sm font-bold hover:bg-neutral-200 active:scale-[0.98] transition-all disabled:opacity-40"
                       >
                         Parse & Review Questions
                         <ArrowRight className="h-4 w-4" />
@@ -499,7 +491,7 @@ The ANSI/SPARC 3-schema architecture consists of:
                     {/* Drag and Drop Zone */}
                     <div
                       onClick={() => mediaInputRef.current?.click()}
-                      className="border-2 border-dashed border-border-subtle hover:border-accent-blue/50 rounded-card p-8 flex flex-col items-center justify-center cursor-pointer transition-colors bg-white/[0.01] hover:bg-white/[0.03]"
+                      className="border-2 border-dashed border-border-subtle hover:border-accent-blue/50 rounded-card p-6 sm:p-8 flex flex-col items-center justify-center cursor-pointer transition-colors bg-white/[0.01] hover:bg-white/[0.03]"
                     >
                       <input
                         ref={mediaInputRef}
@@ -513,10 +505,10 @@ The ANSI/SPARC 3-schema architecture consists of:
                         <Camera className="h-6 w-6" />
                       </div>
                       <p className="text-sm font-semibold text-foreground text-center">
-                        Upload past papers, MST sheets, or handwritten question photos
+                        Upload past papers, MST sheets, or question photos
                       </p>
                       <p className="text-xs text-foreground-muted mt-1 text-center">
-                        Supports PNG, JPG, WebP, and PDF pages. Select multiple sheets at once.
+                        Supports PNG, JPG, WebP, and PDF pages. Tap to select from device/camera.
                       </p>
                     </div>
 
@@ -528,7 +520,7 @@ The ANSI/SPARC 3-schema architecture consists of:
                           <button
                             type="button"
                             onClick={() => setSelectedFiles([])}
-                            className="text-red-400 hover:underline"
+                            className="text-red-400 hover:underline py-1"
                           >
                             Clear all
                           </button>
@@ -588,7 +580,7 @@ The ANSI/SPARC 3-schema architecture consists of:
                         type="button"
                         disabled={selectedFiles.length === 0 || isScanning || !hasApiKey}
                         onClick={handleStartScan}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-btn bg-white text-black text-xs font-bold hover:bg-neutral-200 active:scale-[0.98] transition-all disabled:opacity-40"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[48px] rounded-btn bg-white text-black text-sm font-bold hover:bg-neutral-200 active:scale-[0.98] transition-all disabled:opacity-40"
                       >
                         {isScanning ? (
                           <>

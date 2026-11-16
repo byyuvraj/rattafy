@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
@@ -10,6 +10,20 @@ export const metadata: Metadata = {
   title: "Rattafy — Visual Exam-Prep & Flashcard Study Environment",
   description:
     "Turn giant Word docs and past papers into structured, unit-wise swipeable cards. Built for high-retention university exam mastery.",
+  applicationName: "Rattafy",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Rattafy",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: "#000000",
 };
 
 export default function RootLayout({

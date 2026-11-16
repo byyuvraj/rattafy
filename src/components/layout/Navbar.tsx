@@ -39,16 +39,17 @@ export default function Navbar() {
         </Link>
 
         {/* Center / Right Nav Items */}
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-1.5 sm:gap-4">
           <Link
             href="/"
-            className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-btn transition-colors ${
+            aria-label="Subjects"
+            className={`inline-flex items-center justify-center gap-1.5 text-xs font-medium px-3 py-2 min-h-[44px] rounded-btn transition-colors ${
               pathname === "/"
                 ? "bg-white/10 text-foreground"
                 : "text-foreground-secondary hover:text-foreground hover:bg-white/[0.04]"
             }`}
           >
-            <BookOpen className="h-3.5 w-3.5" />
+            <BookOpen className="h-4 w-4" />
             <span className="hidden sm:inline">Subjects</span>
           </Link>
 
@@ -56,19 +57,20 @@ export default function Navbar() {
           <Link
             href="/settings"
             title={hasKey ? "Gemini API connected" : "Offline mode (No Gemini API key set)"}
-            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-btn bg-white/[0.03] border border-border-subtle text-[11px] font-mono text-foreground-muted hover:border-border-hover transition-colors"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 min-h-[44px] rounded-btn bg-white/[0.03] border border-border-subtle text-[11px] font-mono text-foreground-muted hover:border-border-hover transition-colors"
           >
             <span
-              className={`h-1.5 w-1.5 rounded-full ${
+              className={`h-2 w-2 rounded-full ${
                 hasKey ? "bg-accent-green shadow-[0_0_8px_#22c55e]" : "bg-neutral-600"
               }`}
             />
-            {hasKey ? "Gemini Ready" : "Offline Mode"}
+            <span className="hidden md:inline">{hasKey ? "Gemini Ready" : "Offline Mode"}</span>
           </Link>
 
           <Link
             href="/settings"
-            className={`inline-flex items-center gap-1.5 text-xs font-medium p-2 sm:px-2.5 sm:py-1.5 rounded-btn transition-colors ${
+            aria-label="Settings"
+            className={`inline-flex items-center justify-center gap-1.5 text-xs font-medium p-2.5 sm:px-3 sm:py-2 min-h-[44px] min-w-[44px] rounded-btn transition-colors ${
               pathname === "/settings"
                 ? "bg-white/10 text-foreground"
                 : "text-foreground-secondary hover:text-foreground hover:bg-white/[0.04]"

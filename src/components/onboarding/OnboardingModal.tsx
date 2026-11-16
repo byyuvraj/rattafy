@@ -136,7 +136,7 @@ export default function OnboardingModal({ forceOpen = false, onComplete }: Onboa
                   setValidationError(null);
                 }}
                 placeholder="AIzaSy..."
-                className="w-full rounded-btn border border-border-subtle bg-black px-3.5 py-2.5 font-mono text-sm text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none transition-colors"
+                className="w-full rounded-btn border border-border-subtle bg-black px-3.5 py-2.5 min-h-[44px] font-mono text-base sm:text-sm text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none transition-colors"
               />
             </div>
 
@@ -169,11 +169,11 @@ export default function OnboardingModal({ forceOpen = false, onComplete }: Onboa
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-7 flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-border-subtle">
+          <div className="mt-7 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-border-subtle">
             <button
               type="button"
               onClick={handleSkip}
-              className="w-full sm:w-auto text-xs text-foreground-secondary hover:text-foreground hover:underline transition-colors px-2 py-1"
+              className="w-full sm:w-auto text-xs text-foreground-secondary hover:text-foreground hover:underline transition-colors px-3 py-2.5 min-h-[44px] flex items-center justify-center rounded-btn"
             >
               Continue without API key (Mode A Text only)
             </button>
@@ -182,7 +182,7 @@ export default function OnboardingModal({ forceOpen = false, onComplete }: Onboa
               type="button"
               disabled={isValidating || validationSuccess}
               onClick={handleValidateAndSave}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-btn bg-white px-5 py-2 text-sm font-semibold text-black hover:bg-neutral-200 active:scale-[0.98] transition-all disabled:opacity-50"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-btn bg-white px-5 py-3 min-h-[48px] text-sm font-bold text-black hover:bg-neutral-200 active:scale-[0.98] transition-all disabled:opacity-50"
             >
               {isValidating ? (
                 <>

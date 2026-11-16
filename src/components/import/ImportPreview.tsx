@@ -266,18 +266,18 @@ export default function ImportPreview({
         </div>
 
         {/* Action Controls */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2">
           {unsortedCount > 0 && (
             <button
               type="button"
               onClick={handleAutoAssign}
               disabled={isAssigningUnits}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-white/5 border border-white/10 hover:border-accent-blue/40 text-xs font-medium text-foreground hover:text-accent-blue transition-all disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[44px] rounded-btn bg-white/5 border border-white/10 hover:border-accent-blue/40 text-xs font-medium text-foreground hover:text-accent-blue transition-all disabled:opacity-50"
             >
               {isAssigningUnits ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Sparkles className="h-3.5 w-3.5 text-accent-blue" />
+                <Sparkles className="h-4 w-4 text-accent-blue" />
               )}
               Auto-assign Unsorted ({unsortedCount})
             </button>
@@ -288,14 +288,14 @@ export default function ImportPreview({
               type="button"
               onClick={handleBulkGenerateAnswers}
               disabled={isGeneratingAnswers}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-white/5 border border-white/10 hover:border-accent-blue/40 text-xs font-medium text-foreground hover:text-accent-blue transition-all disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[44px] rounded-btn bg-white/5 border border-white/10 hover:border-accent-blue/40 text-xs font-medium text-foreground hover:text-accent-blue transition-all disabled:opacity-50"
             >
               {isGeneratingAnswers ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                <Sparkles className="h-4 w-4 text-amber-400" />
               )}
-              Generate {questionsWithoutAnswer} Answers with Gemini
+              Generate {questionsWithoutAnswer} Answers
             </button>
           )}
 
@@ -303,9 +303,9 @@ export default function ImportPreview({
             type="button"
             disabled={isSaving || totalQuestions === 0}
             onClick={onConfirm}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-btn bg-white text-black text-xs font-bold hover:bg-neutral-200 active:scale-[0.98] transition-all disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 min-h-[44px] rounded-btn bg-white text-black text-xs font-bold hover:bg-neutral-200 active:scale-[0.98] transition-all disabled:opacity-50"
           >
-            {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
             Confirm & Import ({totalQuestions})
           </button>
         </div>
@@ -435,18 +435,18 @@ export default function ImportPreview({
                                 />
                               </div>
                             </div>
-                            <div className="flex items-center justify-end gap-2 pt-2">
+                            <div className="flex items-center justify-end gap-2.5 pt-2">
                               <button
                                 type="button"
                                 onClick={() => setEditingQuestion(null)}
-                                className="px-2.5 py-1 text-xs text-foreground-secondary hover:text-foreground"
+                                className="px-3.5 py-2 min-h-[44px] text-xs text-foreground-secondary hover:text-foreground flex items-center justify-center rounded-btn"
                               >
                                 Cancel
                               </button>
                               <button
                                 type="button"
                                 onClick={handleSaveEdit}
-                                className="px-3 py-1 rounded-btn bg-white text-black text-xs font-semibold hover:bg-neutral-200"
+                                className="px-4 py-2 min-h-[44px] rounded-btn bg-white text-black text-xs font-bold hover:bg-neutral-200 flex items-center justify-center"
                               >
                                 Save Changes
                               </button>
@@ -454,7 +454,7 @@ export default function ImportPreview({
                           </div>
                         ) : (
                           /* Question View */
-                          <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start justify-between gap-3">
                             <div className="space-y-1.5 flex-1 min-w-0">
                               {/* Metadata Badges */}
                               <div className="flex flex-wrap items-center gap-1.5">
@@ -501,7 +501,7 @@ export default function ImportPreview({
                                     type="button"
                                     onClick={() => handleSingleGenerateAnswer(uIdx, qIdx)}
                                     disabled={isCurrentGenerating}
-                                    className="inline-flex items-center gap-1 text-[11px] text-accent-blue hover:underline"
+                                    className="inline-flex items-center gap-1 text-xs text-accent-blue hover:underline py-1.5 min-h-[36px]"
                                   >
                                     {isCurrentGenerating ? (
                                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -520,17 +520,17 @@ export default function ImportPreview({
                                 type="button"
                                 onClick={() => handleStartEdit(uIdx, qIdx)}
                                 title="Edit question"
-                                className="p-1 rounded text-foreground-muted hover:text-foreground hover:bg-white/5 transition-colors"
+                                className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-btn text-foreground-muted hover:text-foreground hover:bg-white/5 transition-colors"
                               >
-                                <Edit2 className="h-3.5 w-3.5" />
+                                <Edit2 className="h-4 w-4" />
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleDeleteQuestion(uIdx, qIdx)}
                                 title="Delete question"
-                                className="p-1 rounded text-foreground-muted hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-btn text-foreground-muted hover:text-red-400 hover:bg-red-500/10 transition-colors"
                               >
-                                <Trash2 className="h-3.5 w-3.5" />
+                                <Trash2 className="h-4 w-4" />
                               </button>
                             </div>
                           </div>

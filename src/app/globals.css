@@ -9,12 +9,14 @@
 
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html {
   background-color: #000000;
   color: #ededed;
   color-scheme: dark;
+  touch-action: manipulation;
 }
 
 body {
@@ -24,6 +26,12 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Ensure smooth touch scrolling on iOS */
+.scroll-touch {
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Lenis smooth scrolling rules */
@@ -91,4 +99,12 @@ html.lenis, html.lenis body {
 
 .modal-glow {
   background-image: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.04), transparent 60%);
+}
+
+/* Touch friendly button helpers */
+@layer utilities {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
