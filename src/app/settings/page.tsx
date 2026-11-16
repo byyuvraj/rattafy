@@ -1,15 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import {
-  ShieldCheck,
   CheckCircle2,
   Trash2,
   Database,
   Shield,
   Loader2,
-  ExternalLink,
 } from "lucide-react";
 import {
   getStorageStats,
@@ -21,7 +18,6 @@ import { useDialog } from "@/components/ui/DialogProvider";
 export default function SettingsPage() {
   const { confirm, alert } = useDialog();
 
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [storageInfo, setStorageInfo] = useState<{
     usageKB: number;
     quotaMB: number;
@@ -30,12 +26,6 @@ export default function SettingsPage() {
   const [isRequestingPersistence, setIsRequestingPersistence] = useState(false);
 
   useEffect(() => {
-    // Check admin session status
-    fetch("/api/admin/auth")
-      .then((r) => r.json())
-      .then((d) => setIsAdmin(Boolean(d.authenticated)))
-      .catch(() => setIsAdmin(false));
-
     getStorageStats().then(setStorageInfo);
     ensureStoragePersistence().then(() => {
       getStorageStats().then(setStorageInfo);
@@ -76,53 +66,11 @@ export default function SettingsPage() {
           Settings & Storage
         </h1>
         <p className="text-xs sm:text-sm text-foreground-secondary">
-          Configure offline cache persistence, manage your local study progress, or open the Admin Portal.
+          Configure offline cache persistence and manage your local revision session.
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {/* Admin Portal Card */}
-        <div className="rounded-card border border-border-subtle bg-surface p-5 sm:p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-btn bg-white/5 border border-border-subtle text-accent-blue">
-                <ShieldCheck className="h-4 w-4" />
-              </div>
-              <div>
-                <h2 className="text-base font-semibold text-foreground">Admin Portal</h2>
-                <p className="text-xs text-foreground-secondary">
-                  Manage subjects, upload exam past-paper files, and publish questions.
-                </p>
-              </div>
-            </div>
-
-            <span
-              className={`font-mono text-[11px] px-2 py-0.5 rounded-full border ${
-                isAdmin
-                  ? "bg-accent-green/10 text-accent-green border-accent-green/20"
-                  : "bg-neutral-800 text-neutral-400 border-neutral-700"
-              }`}
-            >
-              {isAdmin ? "Admin Active" : "Locked"}
-            </span>
-          </div>
-
-          <div className="pt-2 flex items-center justify-between border-t border-border-subtle">
-            <p className="text-xs text-foreground-muted">
-              {isAdmin
-                ? "Your admin session is active on this browser."
-                : "Passcode required to add or modify exam content."}
-            </p>
-            <Link
-              href="/admin"
-              className="inline-flex items-center gap-1 px-4 py-2 rounded-btn bg-white text-black text-xs font-bold hover:bg-neutral-200 transition-all"
-            >
-              <span>{isAdmin ? "Open Dashboard" : "Enter Admin Portal"}</span>
-              <ExternalLink className="h-3 w-3" />
-            </Link>
-          </div>
-        </div>
-
         {/* Offline Cache & Storage Persistence Card */}
         <div className="rounded-card border border-border-subtle bg-surface p-5 sm:p-6 space-y-5">
           <div className="flex items-center gap-2.5">

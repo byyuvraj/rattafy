@@ -69,6 +69,9 @@ export async function GET(_req: NextRequest, { params }: Params) {
       subject: {
         id: subject.id,
         name: subject.name,
+        code: subject.code || "",
+        branch: subject.branch || "",
+        year: subject.year || "",
         syllabus: subject.syllabus || "",
         createdAt: subject.createdAt.getTime(),
       },
@@ -88,12 +91,15 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   try {
     const body = await req.json();
-    const { name, syllabus } = body;
+    const { name, code, branch, year, syllabus } = body;
 
     const updated = await prisma.subject.update({
       where: { id: params.id },
       data: {
         ...(name !== undefined ? { name: name.trim() } : {}),
+        ...(code !== undefined ? { code: code.trim() || null } : {}),
+        ...(branch !== undefined ? { branch: branch.trim() || null } : {}),
+        ...(year !== undefined ? { year: year.trim() || null } : {}),
         ...(syllabus !== undefined ? { syllabus: syllabus.trim() || null } : {}),
       },
     });

@@ -33,9 +33,25 @@ export default function SubjectCard({
     >
       <div className="flex items-start justify-between gap-4">
         {/* Subject Info */}
-        <div className="space-y-2 flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-foreground-muted font-mono">
+        <div className="space-y-2.5 flex-1 min-w-0">
+          {/* Metadata Badges (Code, Branch, Year) */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            {subject.code && (
+              <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20">
+                {subject.code}
+              </span>
+            )}
+            {subject.branch && (
+              <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-white/5 border border-border-subtle text-foreground-secondary">
+                {subject.branch}
+              </span>
+            )}
+            {subject.year && (
+              <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-white/5 border border-border-subtle text-foreground-muted">
+                {subject.year}
+              </span>
+            )}
+            <span className="font-mono text-[10px] px-1.5 py-0.5 text-foreground-muted">
               {unitsCount} {unitsCount === 1 ? "unit" : "units"}
             </span>
           </div>

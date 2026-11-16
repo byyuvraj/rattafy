@@ -19,6 +19,9 @@ export async function GET() {
     const formatted = subjects.map((s) => ({
       id: s.id,
       name: s.name,
+      code: s.code || "",
+      branch: s.branch || "",
+      year: s.year || "",
       syllabus: s.syllabus || "",
       createdAt: s.createdAt.getTime(),
       unitsCount: s._count.units,
@@ -39,7 +42,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, initialUnits = 5, syllabus = "" } = body;
+    const { name, code = "", branch = "", year = "", initialUnits = 5, syllabus = "" } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json({ error: "Subject name is required" }, { status: 400 });
@@ -49,6 +52,9 @@ export async function POST(req: NextRequest) {
       const created = await tx.subject.create({
         data: {
           name: name.trim(),
+          code: code?.trim() || null,
+          branch: branch?.trim() || null,
+          year: year?.trim() || null,
           syllabus: syllabus.trim() || null,
         },
       });
@@ -73,6 +79,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       id: subject.id,
       name: subject.name,
+      code: subject.code || "",
+      branch: subject.branch || "",
+      year: subject.year || "",
       syllabus: subject.syllabus || "",
       createdAt: subject.createdAt.getTime(),
       unitsCount: initialUnits,

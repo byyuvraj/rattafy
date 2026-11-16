@@ -437,11 +437,21 @@ export default function AdminPage() {
                         <ChevronRight className="h-4 w-4 text-foreground-muted shrink-0" />
                       )}
                       <div>
-                        <h3 className="text-sm sm:text-base font-bold text-foreground truncate">
-                          {sub.name}
-                        </h3>
-                        <p className="text-xs text-foreground-muted font-mono">
-                          {sub.unitsCount || 0} units • {sub.questionsCount || 0} questions
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm sm:text-base font-bold text-foreground truncate">
+                            {sub.name}
+                          </h3>
+                          {sub.code && (
+                            <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20">
+                              {sub.code}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-foreground-muted font-mono flex items-center gap-1.5 flex-wrap mt-0.5">
+                          {sub.branch && <span>{sub.branch} •</span>}
+                          {sub.year && <span>{sub.year} •</span>}
+                          <span>{sub.unitsCount || 0} units</span>
+                          <span>• {sub.questionsCount || 0} questions</span>
                         </p>
                       </div>
                     </button>

@@ -1,14 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import SubjectCard from "@/components/home/SubjectCard";
 import { Subject } from "@/types";
 import {
   Layers,
   Search,
   BookOpen,
-  ShieldCheck,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -38,9 +36,15 @@ export default function HomePage() {
   }, []);
 
   const filteredSubjects = subjects
-    ? subjects.filter((s) =>
-        s.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+    ? subjects.filter((s) => {
+        const q = searchQuery.toLowerCase();
+        return (
+          s.name.toLowerCase().includes(q) ||
+          (s.code && s.code.toLowerCase().includes(q)) ||
+          (s.branch && s.branch.toLowerCase().includes(q)) ||
+          (s.year && s.year.toLowerCase().includes(q))
+        );
+      })
     : [];
 
   const totalQuestionsCount = subjects
@@ -65,16 +69,6 @@ export default function HomePage() {
             Rattafy transforms university past-paper questions and answers into structured,
             high-retention swipeable cards. Built for exam-ready mastery.
           </p>
-
-          <div className="pt-2 flex flex-wrap items-center gap-3">
-            <Link
-              href="/admin"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-btn bg-white/5 border border-border-subtle hover:border-border-hover text-xs font-medium text-foreground-secondary hover:text-foreground transition-all"
-            >
-              <ShieldCheck className="h-4 w-4 text-accent-blue" />
-              Admin Portal
-            </Link>
-          </div>
         </div>
 
         {/* Aggregate Stats Strip */}
@@ -102,11 +96,11 @@ export default function HomePage() {
             </div>
 
             {subjects && subjects.length > 0 && (
-              <div className="relative w-full sm:w-64">
+              <div className="relative w-full sm:w-72">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-foreground-muted" />
                 <input
                   type="text"
-                  placeholder="Filter subjects..."
+                  placeholder="Search by name, code, branch, year..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full rounded-btn border border-border-subtle bg-black pl-8 pr-3 py-1.5 min-h-[36px] text-xs text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none"
@@ -132,16 +126,9 @@ export default function HomePage() {
                 <Layers className="h-6 w-6" />
               </div>
               <h3 className="text-base font-bold text-foreground">No subjects published yet</h3>
-              <p className="text-xs text-foreground-secondary max-w-sm mx-auto mt-1 mb-6 leading-relaxed">
-                The administrator has not uploaded any subjects yet. Log in to the Admin Portal to create subjects and upload exam papers.
+              <p className="text-xs text-foreground-secondary max-w-sm mx-auto mt-1 leading-relaxed">
+                Exam questions and past papers will appear here once published by your course administrator.
               </p>
-              <Link
-                href="/admin"
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] rounded-btn bg-white text-black text-xs sm:text-sm font-bold hover:bg-neutral-200 transition-all active:scale-[0.98]"
-              >
-                <ShieldCheck className="h-4 w-4" />
-                Open Admin Portal
-              </Link>
             </div>
           ) : filteredSubjects.length === 0 ? (
             <div className="py-12 text-center text-xs text-foreground-muted">

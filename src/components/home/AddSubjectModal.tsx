@@ -18,6 +18,9 @@ export default function AddSubjectModal({
 }: AddSubjectModalProps) {
   const { alert } = useDialog();
   const [name, setName] = useState("");
+  const [code, setCode] = useState("");
+  const [branch, setBranch] = useState("");
+  const [year, setYear] = useState("");
   const [syllabus, setSyllabus] = useState("");
   const [unitCount, setUnitCount] = useState(4);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,6 +36,9 @@ export default function AddSubjectModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
+          code: code.trim() || undefined,
+          branch: branch.trim() || undefined,
+          year: year.trim() || undefined,
           initialUnits: unitCount,
           syllabus: syllabus.trim() || undefined,
         }),
@@ -44,6 +50,9 @@ export default function AddSubjectModal({
       }
 
       setName("");
+      setCode("");
+      setBranch("");
+      setYear("");
       setSyllabus("");
       onClose();
       onSubjectAdded?.(data.id);
@@ -62,7 +71,7 @@ export default function AddSubjectModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -75,7 +84,7 @@ export default function AddSubjectModal({
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="relative w-full max-w-md rounded-card border border-border-subtle bg-surface p-6 shadow-card modal-glow z-10"
+          className="relative w-full max-w-lg rounded-card border border-border-subtle bg-surface p-5 sm:p-6 shadow-card modal-glow z-10 my-8"
         >
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2.5">
@@ -106,6 +115,48 @@ export default function AddSubjectModal({
                 placeholder="e.g. Operating Systems"
                 className="w-full rounded-btn border border-border-subtle bg-black px-3.5 py-2.5 min-h-[44px] text-base sm:text-xs text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none"
               />
+            </div>
+
+            {/* Subject Code, Branch, and Year Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs font-medium text-foreground-secondary block mb-1.5">
+                  Subject Code
+                </label>
+                <input
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="e.g. CS-302"
+                  className="w-full rounded-btn border border-border-subtle bg-black px-3 py-2 min-h-[40px] text-xs font-mono text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-foreground-secondary block mb-1.5">
+                  Branch / Stream
+                </label>
+                <input
+                  type="text"
+                  value={branch}
+                  onChange={(e) => setBranch(e.target.value)}
+                  placeholder="e.g. CSE / IT"
+                  className="w-full rounded-btn border border-border-subtle bg-black px-3 py-2 min-h-[40px] text-xs text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-foreground-secondary block mb-1.5">
+                  Year / Semester
+                </label>
+                <input
+                  type="text"
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
+                  placeholder="e.g. 3rd Year"
+                  className="w-full rounded-btn border border-border-subtle bg-black px-3 py-2 min-h-[40px] text-xs text-foreground placeholder:text-foreground-muted focus:border-border-focus focus:outline-none"
+                />
+              </div>
             </div>
 
             <div>

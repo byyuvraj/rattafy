@@ -3,6 +3,9 @@ export type QuestionStatus = 'new' | 'learning' | 'known';
 export interface Subject {
   id: string;
   name: string;
+  code?: string;
+  branch?: string;
+  year?: string;
   createdAt: number;
   syllabus?: string;
   unitsCount?: number;

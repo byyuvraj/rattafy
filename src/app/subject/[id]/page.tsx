@@ -161,8 +161,23 @@ export default function SubjectPage() {
           {/* Header Card */}
           <div className="rounded-card border border-border-subtle bg-surface p-6 sm:p-8 space-y-6">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-              <div className="space-y-2 max-w-2xl">
-                <div className="flex items-center gap-2">
+              <div className="space-y-2.5 max-w-2xl">
+                <div className="flex flex-wrap items-center gap-2">
+                  {subject.code && (
+                    <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20">
+                      {subject.code}
+                    </span>
+                  )}
+                  {subject.branch && (
+                    <span className="font-mono text-xs px-2 py-0.5 rounded bg-white/5 border border-border-subtle text-foreground-secondary">
+                      {subject.branch}
+                    </span>
+                  )}
+                  {subject.year && (
+                    <span className="font-mono text-xs px-2 py-0.5 rounded bg-white/5 border border-border-subtle text-foreground-muted">
+                      {subject.year}
+                    </span>
+                  )}
                   <span className="text-xs text-foreground-muted font-mono">
                     {units.length} Units
                   </span>
