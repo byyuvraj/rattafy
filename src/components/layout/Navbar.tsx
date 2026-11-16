@@ -38,11 +38,8 @@ export default function Navbar() {
               priority
             />
           </div>
-          <div className="flex items-baseline gap-1.5">
+          <div className="flex items-center">
             <span className="text-base font-bold tracking-tight text-foreground">Rattafy</span>
-            <span className="font-mono text-[10px] uppercase tracking-wider text-foreground-muted px-1.5 py-0.5 rounded bg-white/[0.04] border border-border-subtle">
-              beta
-            </span>
           </div>
         </Link>
 
