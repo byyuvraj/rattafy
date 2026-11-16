@@ -28,6 +28,7 @@ import { db } from "@/lib/db";
 import { generateId } from "@/lib/utils";
 import { Subject, Unit, ParsedUnitGroup, ParsedQuestion } from "@/types";
 import ImportPreview from "./ImportPreview";
+import { useDialog } from "@/components/ui/DialogProvider";
 
 interface ImportModalProps {
   isOpen: boolean;
@@ -44,6 +45,7 @@ export default function ImportModal({
   units,
   onImportComplete,
 }: ImportModalProps) {
+  const { confirm, alert } = useDialog();
   const [activeTab, setActiveTab] = useState<"text" | "scan">("text");
 
   // Mode A: Text State
@@ -98,7 +100,14 @@ export default function ImportModal({
     }
   }, [pastedText, activeTab, subject.id]);
 
-  const handleClearDraft = () => {
+  const handleClearDraft = async () => {
+    const confirmed = await confirm({
+      title: "Discard Draft?",
+      message: "Are you sure you want to discard your saved draft text? This cannot be undone.",
+      confirmLabel: "Discard Draft",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setPastedText("");
     clearImportDraft(subject.id);
     setIsDraftRestored(false);
@@ -146,7 +155,11 @@ export default function ImportModal({
   const handleStartScan = async () => {
     const apiKey = getApiKey();
     if (!apiKey) {
-      alert("Please configure your Google Gemini API key in Settings or Onboarding first.");
+      await alert({
+        title: "Gemini API Key Required",
+        message: "Please configure your Google Gemini API key in Settings or Onboarding first.",
+        variant: "warning",
+      });
       return;
     }
 
@@ -236,7 +249,11 @@ export default function ImportModal({
 
       setParsedGroups(sortedGroups);
     } catch (err: any) {
-      alert(`Paper scanning failed: ${err.message}`);
+      await alert({
+        title: "Scanning Error",
+        message: `Paper scanning failed: ${err.message}`,
+        variant: "danger",
+      });
     } finally {
       setIsScanning(false);
       setScanProgress(null);
@@ -311,7 +328,11 @@ export default function ImportModal({
       handleClose();
       onImportComplete?.();
     } catch (err: any) {
-      alert(`Failed to save imported questions: ${err.message}`);
+      await alert({
+        title: "Import Error",
+        message: `Failed to save imported questions: ${err.message}`,
+        variant: "danger",
+      });
     } finally {
       setIsSaving(false);
     }

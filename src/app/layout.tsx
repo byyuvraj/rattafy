@@ -5,6 +5,7 @@ import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import SmoothScroll from "@/components/layout/SmoothScroll";
 import OnboardingModal from "@/components/onboarding/OnboardingModal";
+import { DialogProvider } from "@/components/ui/DialogProvider";
 
 export const metadata: Metadata = {
   title: "Rattafy - Visual Exam-Prep & Flashcard Study Environment",
@@ -45,13 +46,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${GeistSans.variable} ${GeistMono.variable}`}>
       <body className="min-h-screen bg-black text-foreground antialiased selection:bg-accent-blue/30 selection:text-white">
-        <SmoothScroll>
-          <div className="flex min-h-screen flex-col">
-            <Navbar />
-            <main className="flex-1">{children}</main>
-          </div>
-          <OnboardingModal />
-        </SmoothScroll>
+        <DialogProvider>
+          <SmoothScroll>
+            <div className="flex min-h-screen flex-col">
+              <Navbar />
+              <main className="flex-1">{children}</main>
+            </div>
+            <OnboardingModal />
+          </SmoothScroll>
+        </DialogProvider>
       </body>
     </html>
   );

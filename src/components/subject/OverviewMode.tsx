@@ -18,6 +18,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import MarkdownContent from "../study/MarkdownContent";
+import { useDialog } from "@/components/ui/DialogProvider";
 
 interface OverviewModeProps {
   subject: Subject;
@@ -34,6 +35,7 @@ export default function OverviewMode({
   onClose,
   onQuestionsUpdated,
 }: OverviewModeProps) {
+  const { confirm } = useDialog();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [expandedQuestions, setExpandedQuestions] = useState<Record<string, boolean>>({});
@@ -74,7 +76,13 @@ export default function OverviewMode({
   };
 
   const handleDelete = async (q: Question) => {
-    if (confirm("Are you sure you want to delete this question?")) {
+    const confirmed = await confirm({
+      title: "Delete Question?",
+      message: "Are you sure you want to delete this question? This cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (confirmed) {
       await db.questions.delete(q.id);
       onQuestionsUpdated?.();
     }

@@ -6,6 +6,7 @@ import { X, Plus, BookOpen, Layers } from "lucide-react";
 import { db } from "@/lib/db";
 import { generateId } from "@/lib/utils";
 import { Subject, Unit } from "@/types";
+import { useDialog } from "@/components/ui/DialogProvider";
 
 interface AddSubjectModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export default function AddSubjectModal({
   onClose,
   onSubjectAdded,
 }: AddSubjectModalProps) {
+  const { alert } = useDialog();
   const [name, setName] = useState("");
   const [syllabus, setSyllabus] = useState("");
   const [unitCount, setUnitCount] = useState(4);
@@ -62,7 +64,11 @@ export default function AddSubjectModal({
       onClose();
       onSubjectAdded?.(subjectId);
     } catch (err: any) {
-      alert(`Failed to create subject: ${err.message}`);
+      await alert({
+        title: "Creation Error",
+        message: `Failed to create subject: ${err.message}`,
+        variant: "danger",
+      });
     } finally {
       setIsSubmitting(false);
     }

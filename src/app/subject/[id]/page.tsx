@@ -11,6 +11,7 @@ import UnitCard from "@/components/subject/UnitCard";
 import ImportModal from "@/components/import/ImportModal";
 import StudyView from "@/components/study/StudyView";
 import OverviewMode from "@/components/subject/OverviewMode";
+import { useDialog } from "@/components/ui/DialogProvider";
 import {
   Play,
   Upload,
@@ -30,6 +31,7 @@ export default function SubjectPage() {
   const params = useParams();
   const router = useRouter();
   const subjectId = params.id as string;
+  const { confirm } = useDialog();
 
   // Modals & View Modes
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -92,11 +94,14 @@ export default function SubjectPage() {
 
   // Delete subject handler
   const handleDeleteSubject = async () => {
-    if (
-      confirm(
-        `Are you sure you want to delete "${subject.name}" and all its units & questions? This cannot be undone.`
-      )
-    ) {
+    const confirmed = await confirm({
+      title: "Delete Subject?",
+      message: `Are you sure you want to delete "${subject.name}" and all its units & questions? This cannot be undone.`,
+      confirmLabel: "Delete Subject",
+      variant: "danger",
+    });
+
+    if (confirmed) {
       await db.transaction("rw", db.subjects, db.units, db.questions, async () => {
         await db.questions.where("subjectId").equals(subjectId).delete();
         await db.units.where("subjectId").equals(subjectId).delete();

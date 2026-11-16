@@ -29,8 +29,10 @@ import {
 } from "@/lib/storage";
 import { validateGeminiApiKey } from "@/lib/gemini";
 import { exportAllData, importAllData, clearAllData } from "@/lib/db";
+import { useDialog } from "@/components/ui/DialogProvider";
 
 export default function SettingsPage() {
+  const { confirm, alert } = useDialog();
   const [apiKeyInput, setApiKeyInput] = useState("");
   const [modelInput, setModelInput] = useState(AVAILABLE_MODELS[0].id);
   const [isValidating, setIsValidating] = useState(false);
@@ -135,7 +137,11 @@ export default function SettingsPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (err: any) {
-      alert(`Export failed: ${err.message}`);
+      await alert({
+        title: "Export Failed",
+        message: err.message,
+        variant: "danger",
+      });
     } finally {
       setIsExporting(false);
     }
@@ -159,27 +165,43 @@ export default function SettingsPage() {
             `Successfully restored ${result.subjectsCount} subjects and ${result.questionsCount} questions!`
           );
         } catch (innerErr: any) {
-          alert(`Restore failed: ${innerErr.message}`);
+          await alert({
+            title: "Restore Failed",
+            message: innerErr.message,
+            variant: "danger",
+          });
         } finally {
           setIsImporting(false);
         }
       };
       reader.readAsText(file);
     } catch (err: any) {
-      alert(`Failed to read backup file: ${err.message}`);
+      await alert({
+        title: "Read Error",
+        message: `Failed to read backup file: ${err.message}`,
+        variant: "danger",
+      });
       setIsImporting(false);
     }
   };
 
   // Clear Database
   const handleClearDatabase = async () => {
-    if (
-      confirm(
-        "WARNING: This will permanently delete all your subjects, units, questions, and revision notes. Are you sure?"
-      )
-    ) {
+    const confirmed = await confirm({
+      title: "Purge All Data?",
+      message:
+        "WARNING: This will permanently delete all your subjects, units, questions, and revision notes. This action cannot be undone.",
+      confirmLabel: "Delete All Data",
+      variant: "danger",
+    });
+
+    if (confirmed) {
       await clearAllData();
-      alert("All data cleared.");
+      await alert({
+        title: "All Data Cleared",
+        message: "Your subjects, units, and questions have been deleted from this browser.",
+        variant: "success",
+      });
       window.location.href = "/";
     }
   };

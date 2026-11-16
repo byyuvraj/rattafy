@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { autoAssignUnits, generateAnswerForQuestion } from "@/lib/gemini";
 import { getApiKey, getSelectedModel } from "@/lib/storage";
+import { useDialog } from "@/components/ui/DialogProvider";
 
 interface ImportPreviewProps {
   groups: ParsedUnitGroup[];
@@ -40,6 +41,7 @@ export default function ImportPreview({
   onConfirm,
   isSaving = false,
 }: ImportPreviewProps) {
+  const { confirm, alert } = useDialog();
   const [expandedUnits, setExpandedUnits] = useState<Record<number, boolean>>({ 0: true, 1: true });
   const [editingQuestion, setEditingQuestion] = useState<{
     unitIndex: number;
@@ -121,7 +123,15 @@ export default function ImportPreview({
     setEditingQuestion(null);
   };
 
-  const handleDeleteQuestion = (uIdx: number, qIdx: number) => {
+  const handleDeleteQuestion = async (uIdx: number, qIdx: number) => {
+    const confirmed = await confirm({
+      title: "Remove Question?",
+      message: "Are you sure you want to remove this question from the import preview list?",
+      confirmLabel: "Remove",
+      variant: "danger",
+    });
+    if (!confirmed) return;
+
     const newGroups = [...groups];
     newGroups[uIdx].questions.splice(qIdx, 1);
     const filtered = newGroups.filter((g) => g.questions.length > 0);
@@ -132,7 +142,11 @@ export default function ImportPreview({
   const handleAutoAssign = async () => {
     const apiKey = getApiKey();
     if (!apiKey) {
-      alert("Please provide a Gemini API key in Settings to use unit auto-assignment.");
+      await alert({
+        title: "Gemini Key Required",
+        message: "Please provide a Gemini API key in Settings to use unit auto-assignment.",
+        variant: "warning",
+      });
       return;
     }
 
@@ -147,7 +161,11 @@ export default function ImportPreview({
             .map((g) => ({ number: g.unitNumber, title: g.unitTitle }));
 
       if (unitTargets.length === 0) {
-        alert("Please add at least one named unit to classify questions into.");
+        await alert({
+          title: "Unit Targets Required",
+          message: "Please add at least one named unit to classify questions into.",
+          variant: "info",
+        });
         setIsAssigningUnits(false);
         return;
       }
@@ -181,7 +199,11 @@ export default function ImportPreview({
 
       onUpdateGroups(newGroups.sort((a, b) => a.unitNumber - b.unitNumber));
     } catch (err: any) {
-      alert(`Auto-assignment failed: ${err.message}`);
+      await alert({
+        title: "Auto-Assignment Failed",
+        message: err.message,
+        variant: "danger",
+      });
     } finally {
       setIsAssigningUnits(false);
     }
@@ -191,7 +213,11 @@ export default function ImportPreview({
   const handleBulkGenerateAnswers = async () => {
     const apiKey = getApiKey();
     if (!apiKey) {
-      alert("Please configure a Gemini API Key in Settings to generate AI answers.");
+      await alert({
+        title: "Gemini Key Required",
+        message: "Please configure a Gemini API Key in Settings to generate AI answers.",
+        variant: "warning",
+      });
       return;
     }
 
@@ -213,7 +239,11 @@ export default function ImportPreview({
 
       onUpdateGroups(newGroups);
     } catch (err: any) {
-      alert(`Answer generation error: ${err.message}`);
+      await alert({
+        title: "Answer Generation Error",
+        message: err.message,
+        variant: "danger",
+      });
     } finally {
       setIsGeneratingAnswers(false);
       setGeneratingQIndex(null);
@@ -224,7 +254,11 @@ export default function ImportPreview({
   const handleSingleGenerateAnswer = async (uIdx: number, qIdx: number) => {
     const apiKey = getApiKey();
     if (!apiKey) {
-      alert("Please configure a Gemini API Key in Settings to generate answers.");
+      await alert({
+        title: "Gemini Key Required",
+        message: "Please configure a Gemini API Key in Settings to generate answers.",
+        variant: "warning",
+      });
       return;
     }
 
@@ -242,7 +276,11 @@ export default function ImportPreview({
       };
       onUpdateGroups(newGroups);
     } catch (err: any) {
-      alert(`Error generating answer: ${err.message}`);
+      await alert({
+        title: "Answer Generation Error",
+        message: err.message,
+        variant: "danger",
+      });
     } finally {
       setGeneratingQIndex(null);
     }
