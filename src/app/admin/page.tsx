@@ -61,6 +61,15 @@ export default function AdminPage() {
   const [editQText, setEditQText] = useState("");
   const [editAnsText, setEditAnsText] = useState("");
   const [editMarks, setEditMarks] = useState<number | undefined>(undefined);
+  const [editUnitId, setEditUnitId] = useState<string>("");
+  const [collapsedUnits, setCollapsedUnits] = useState<Record<string, boolean>>({});
+
+  const toggleUnitCollapse = (unitId: string) => {
+    setCollapsedUnits((prev) => ({
+      ...prev,
+      [unitId]: !prev[unitId],
+    }));
+  };
 
   // Add Question state
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
@@ -263,6 +272,7 @@ export default function AdminPage() {
           question: editQText,
           answer: editAnsText,
           marks: editMarks,
+          unitId: editUnitId || undefined,
         }),
       });
       setEditingQuestionId(null);
@@ -579,108 +589,84 @@ export default function AdminPage() {
                             </button>
                           </div>
 
-                          {/* Units List */}
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-foreground-secondary">
-                                Units in {sub.name}
-                              </h4>
-                              {!isAddingUnit && (
+                          {/* Unit-wise Questions Manager */}
+                          <div className="space-y-4">
+                            {/* Manager Toolbar */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                              <div>
+                                <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-foreground-secondary">
+                                  Units & Questions ({subjectDetails.questions.length} questions in {subjectDetails.units.length} {subjectDetails.units.length === 1 ? "unit" : "units"})
+                                </h4>
+                                <p className="text-[11px] text-foreground-muted">
+                                  Questions are organized unit-wise. Click any unit to collapse or view its questions.
+                                </p>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                {!isAddingUnit && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsAddingUnit(true)}
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-btn bg-white/5 hover:bg-white/10 text-xs text-foreground font-medium border border-border-subtle transition-colors"
+                                  >
+                                    <Plus className="h-3.5 w-3.5 text-accent-blue" />
+                                    <span>Add Unit</span>
+                                  </button>
+                                )}
                                 <button
                                   type="button"
-                                  onClick={() => setIsAddingUnit(true)}
-                                  className="text-xs text-accent-blue hover:underline inline-flex items-center gap-1"
+                                  onClick={() => {
+                                    setIsAddingQuestion(!isAddingQuestion);
+                                    if (!newQUnitId && subjectDetails.units.length > 0) {
+                                      setNewQUnitId(subjectDetails.units[0].id);
+                                    }
+                                  }}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-white text-black text-xs font-bold hover:bg-neutral-200 transition-colors"
                                 >
-                                  <Plus className="h-3 w-3" />
-                                  Add Unit
+                                  <Plus className="h-3.5 w-3.5" />
+                                  <span>{isAddingQuestion ? "Cancel" : "Add Question"}</span>
                                 </button>
-                              )}
+                              </div>
                             </div>
 
+                            {/* Add Unit Form */}
                             {isAddingUnit && (
-                              <div className="flex items-center gap-2 p-2 rounded-btn bg-surface border border-border-focus">
+                              <div className="flex items-center gap-2 p-2.5 rounded-card bg-surface border border-border-focus animate-in fade-in duration-150">
+                                <span className="text-xs font-mono text-foreground-muted pl-1">
+                                  #{subjectDetails.units.length + 1}
+                                </span>
                                 <input
                                   type="text"
-                                  placeholder="New unit title..."
+                                  placeholder="New unit title (e.g. Memory Organization & Cache)..."
                                   value={newUnitTitle}
                                   onChange={(e) => setNewUnitTitle(e.target.value)}
                                   className="flex-1 bg-transparent px-2 text-xs text-foreground focus:outline-none"
+                                  autoFocus
                                 />
                                 <button
                                   type="button"
                                   onClick={() => handleAddUnit(sub.id)}
-                                  className="px-3 py-1 rounded bg-white text-black text-xs font-bold"
+                                  disabled={!newUnitTitle.trim()}
+                                  className="px-3.5 py-1.5 rounded-btn bg-white text-black text-xs font-bold disabled:opacity-40"
                                 >
-                                  Add
+                                  Add Unit
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => setIsAddingUnit(false)}
-                                  className="px-2 py-1 text-xs text-foreground-muted hover:text-foreground"
+                                  onClick={() => {
+                                    setIsAddingUnit(false);
+                                    setNewUnitTitle("");
+                                  }}
+                                  className="px-2.5 py-1.5 text-xs text-foreground-muted hover:text-foreground"
                                 >
                                   Cancel
                                 </button>
                               </div>
                             )}
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                              {subjectDetails.units.map((u) => {
-                                const qCount = subjectDetails.questions.filter(
-                                  (q) => q.unitId === u.id
-                                ).length;
-
-                                return (
-                                  <div
-                                    key={u.id}
-                                    className="flex items-center justify-between p-2.5 rounded-btn bg-surface border border-border-subtle text-xs"
-                                  >
-                                    <div className="truncate min-w-0 pr-2">
-                                      <span className="font-mono text-foreground-muted mr-1.5">
-                                        #{u.number}
-                                      </span>
-                                      <span className="font-medium text-foreground">{u.title}</span>
-                                      <span className="text-[10px] text-foreground-muted ml-2 font-mono">
-                                        ({qCount} Qs)
-                                      </span>
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleDeleteUnit(sub.id, u.id)}
-                                      className="text-foreground-muted hover:text-red-400 p-1"
-                                      title="Delete unit"
-                                    >
-                                      <Trash2 className="h-3.5 w-3.5" />
-                                    </button>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-
-                          {/* Questions Management */}
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-foreground-secondary">
-                                Questions ({subjectDetails.questions.length})
-                              </h4>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setIsAddingQuestion(!isAddingQuestion);
-                                  if (!newQUnitId && subjectDetails.units.length > 0) {
-                                    setNewQUnitId(subjectDetails.units[0].id);
-                                  }
-                                }}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-btn bg-white/10 hover:bg-white/15 text-xs text-foreground font-medium transition-colors"
-                              >
-                                <Plus className="h-3.5 w-3.5" />
-                                <span>{isAddingQuestion ? "Cancel" : "Add Question"}</span>
-                              </button>
-                            </div>
-
-                            {/* Add Question Card */}
+                            {/* Add Question Composer */}
                             {isAddingQuestion && (
-                              <div className="p-3 sm:p-4 rounded-card bg-black/60 border border-border-focus space-y-3">
+                              <div className="p-3.5 sm:p-4 rounded-card bg-black/60 border border-border-focus space-y-3 animate-in fade-in duration-150">
                                 <div className="flex items-center justify-between border-b border-border-subtle pb-2">
                                   <span className="text-xs font-semibold text-foreground">Create New Question</span>
                                   <span className="text-[10px] font-mono text-foreground-muted">Subject: {sub.name}</span>
@@ -689,7 +675,7 @@ export default function AdminPage() {
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                   <div className="sm:col-span-2">
                                     <label className="text-[10px] font-mono text-foreground-muted block mb-1">
-                                      Target Unit
+                                      Target Unit *
                                     </label>
                                     <select
                                       value={newQUnitId}
@@ -792,124 +778,422 @@ export default function AdminPage() {
                               </div>
                             )}
 
-                            {subjectDetails.questions.length === 0 ? (
-                              <p className="text-xs text-foreground-muted italic py-2">
-                                No questions uploaded yet. Click &quot;Add Question&quot; above or &quot;Import Papers&quot; to import questions from file/text.
-                              </p>
+                            {/* Units Accordion List */}
+                            {subjectDetails.units.length === 0 && subjectDetails.questions.length === 0 ? (
+                              <div className="p-8 text-center rounded-card border border-dashed border-border-subtle bg-white/[0.01]">
+                                <BookOpen className="h-6 w-6 text-foreground-muted mx-auto mb-2" />
+                                <p className="text-xs text-foreground-secondary mb-3">
+                                  No units or questions created for this subject yet.
+                                </p>
+                                <div className="flex items-center justify-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsAddingUnit(true)}
+                                    className="px-3.5 py-1.5 rounded-btn bg-white text-black text-xs font-bold hover:bg-neutral-200"
+                                  >
+                                    <Plus className="h-3.5 w-3.5 inline mr-1" />
+                                    Add Unit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenImport(sub)}
+                                    className="px-3.5 py-1.5 rounded-btn bg-accent-blue/15 hover:bg-accent-blue/25 text-xs text-accent-blue font-semibold border border-accent-blue/30"
+                                  >
+                                    <Upload className="h-3.5 w-3.5 inline mr-1" />
+                                    Import Past Papers
+                                  </button>
+                                </div>
+                              </div>
                             ) : (
-                              <div className="divide-y divide-border-subtle max-h-96 overflow-y-auto rounded-card border border-border-subtle bg-surface">
-                                {subjectDetails.questions.map((q) => {
-                                  const isEditing = editingQuestionId === q.id;
+                              <div className="space-y-3">
+                                {subjectDetails.units.map((u) => {
+                                  const unitQuestions = subjectDetails.questions.filter(
+                                    (q) => q.unitId === u.id
+                                  );
+                                  const isUnitCollapsed = Boolean(collapsedUnits[u.id]);
 
                                   return (
-                                    <div key={q.id} className="p-3 text-xs space-y-2">
-                                      {isEditing ? (
-                                        <div className="space-y-3 p-3 rounded-card bg-black/60 border border-border-focus">
-                                          <div>
-                                            <label className="text-[10px] font-mono text-foreground-muted block mb-1">
-                                              Question Text
-                                            </label>
-                                            <input
-                                              type="text"
-                                              value={editQText}
-                                              onChange={(e) => setEditQText(e.target.value)}
-                                              className="w-full bg-surface border border-border-subtle px-2.5 py-1.5 text-xs text-foreground rounded-btn focus:outline-none"
-                                              placeholder="Question text"
-                                            />
-                                          </div>
+                                    <div
+                                      key={u.id}
+                                      className="rounded-card border border-border-subtle bg-surface overflow-hidden"
+                                    >
+                                      {/* Unit Header Bar */}
+                                      <div className="flex items-center justify-between p-3 sm:p-3.5 bg-white/[0.02] border-b border-border-subtle">
+                                        <button
+                                          type="button"
+                                          onClick={() => toggleUnitCollapse(u.id)}
+                                          className="flex items-center gap-2.5 text-left flex-1 min-w-0 group"
+                                        >
+                                          {isUnitCollapsed ? (
+                                            <ChevronRight className="h-4 w-4 text-foreground-muted group-hover:text-foreground shrink-0 transition-transform" />
+                                          ) : (
+                                            <ChevronDown className="h-4 w-4 text-foreground-muted group-hover:text-foreground shrink-0 transition-transform" />
+                                          )}
+                                          <span className="font-mono text-xs font-bold text-accent-blue bg-accent-blue/10 px-2 py-0.5 rounded border border-accent-blue/20">
+                                            Unit #{u.number}
+                                          </span>
+                                          <span className="text-xs sm:text-sm font-semibold text-foreground truncate">
+                                            {u.title}
+                                          </span>
+                                          <span className="text-[10px] font-mono text-foreground-muted ml-1 shrink-0">
+                                            ({unitQuestions.length} {unitQuestions.length === 1 ? "question" : "questions"})
+                                          </span>
+                                        </button>
 
-                                          <AnswerWithDiagramEditor
-                                            value={editAnsText}
-                                            onChange={setEditAnsText}
-                                            label="Answer (Markdown & Diagram URLs)"
-                                            placeholder="Answer text... Click 'Add Diagram URL' to insert diagrams."
-                                            rows={4}
-                                          />
-
-                                          <div className="flex items-center justify-between pt-1">
-                                            <div className="flex items-center gap-2">
-                                              <label className="text-[10px] font-mono text-foreground-muted">Marks:</label>
-                                              <input
-                                                type="number"
-                                                value={editMarks || ""}
-                                                onChange={(e) =>
-                                                  setEditMarks(
-                                                    e.target.value ? parseInt(e.target.value, 10) : undefined
-                                                  )
-                                                }
-                                                className="w-20 bg-surface border border-border-subtle px-2 py-1 text-xs text-foreground rounded-btn focus:outline-none"
-                                                placeholder="Marks"
-                                              />
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                              <button
-                                                type="button"
-                                                onClick={() => setEditingQuestionId(null)}
-                                                className="px-3 py-1.5 text-xs text-foreground-muted hover:text-foreground"
-                                              >
-                                                Cancel
-                                              </button>
-                                              <button
-                                                type="button"
-                                                onClick={() => handleSaveQuestionEdit(sub.id, q.id)}
-                                                className="px-4 py-1.5 rounded-btn bg-white text-black text-xs font-bold hover:bg-neutral-200 transition-colors"
-                                              >
-                                                Save Changes
-                                              </button>
-                                            </div>
-                                          </div>
+                                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setNewQUnitId(u.id);
+                                              setIsAddingQuestion(true);
+                                            }}
+                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-btn bg-white/5 hover:bg-white/10 text-xs text-foreground-secondary hover:text-foreground border border-border-subtle transition-colors"
+                                            title="Add question to this unit"
+                                          >
+                                            <Plus className="h-3 w-3" />
+                                            <span className="hidden sm:inline">Add Question</span>
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteUnit(sub.id, u.id)}
+                                            className="p-1.5 text-foreground-muted hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
+                                            title="Delete unit and its questions"
+                                          >
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                          </button>
                                         </div>
-                                      ) : (
-                                        <div className="flex items-start justify-between gap-3">
-                                          <div className="space-y-1.5 flex-1 min-w-0">
-                                            <div className="flex flex-wrap items-center gap-1.5">
-                                              {q.marks && (
-                                                <span className="font-mono text-[10px] text-foreground-muted px-1.5 py-0.5 rounded bg-white/5 border border-border-subtle">
-                                                  {q.marks} Marks
-                                                </span>
-                                              )}
-                                              {/!\[.*?\]\(.*?\)/.test(q.answer) && (
-                                                <span className="inline-flex items-center gap-1 font-mono text-[10px] px-1.5 py-0.5 rounded bg-accent-blue/15 border border-accent-blue/30 text-accent-blue">
-                                                  <ImageIcon className="h-2.5 w-2.5" />
-                                                  Diagram
-                                                </span>
-                                              )}
+                                      </div>
+
+                                      {/* Questions inside this unit */}
+                                      {!isUnitCollapsed && (
+                                        <div className="divide-y divide-border-subtle">
+                                          {unitQuestions.length === 0 ? (
+                                            <div className="p-4 text-center text-xs text-foreground-muted italic">
+                                              No questions in Unit #{u.number} yet.{" "}
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  setNewQUnitId(u.id);
+                                                  setIsAddingQuestion(true);
+                                                }}
+                                                className="text-accent-blue hover:underline font-medium not-italic"
+                                              >
+                                                + Add Question
+                                              </button>
                                             </div>
-                                            <p className="font-semibold text-foreground text-xs">{q.question}</p>
-                                            {q.answer && (
-                                              <p className="text-foreground-muted line-clamp-2 font-mono text-[11px]">
-                                                {q.answer}
-                                              </p>
-                                            )}
-                                          </div>
-                                          <div className="flex items-center gap-1 shrink-0 pt-0.5">
-                                            <button
-                                              type="button"
-                                              onClick={() => {
-                                                setEditingQuestionId(q.id);
-                                                setEditQText(q.question);
-                                                setEditAnsText(q.answer);
-                                                setEditMarks(q.marks);
-                                              }}
-                                              className="p-1.5 text-foreground-muted hover:text-foreground rounded"
-                                              title="Edit question"
-                                            >
-                                              <Edit2 className="h-3.5 w-3.5" />
-                                            </button>
-                                            <button
-                                              type="button"
-                                              onClick={() => handleDeleteQuestion(sub.id, q.id)}
-                                              className="p-1.5 text-foreground-muted hover:text-red-400 rounded"
-                                              title="Delete question"
-                                            >
-                                              <Trash2 className="h-3.5 w-3.5" />
-                                            </button>
-                                          </div>
+                                          ) : (
+                                            unitQuestions.map((q) => {
+                                              const isEditing = editingQuestionId === q.id;
+
+                                              return (
+                                                <div
+                                                  key={q.id}
+                                                  className="p-3 sm:p-3.5 text-xs space-y-2 hover:bg-white/[0.01] transition-colors"
+                                                >
+                                                  {isEditing ? (
+                                                    <div className="space-y-3 p-3.5 rounded-card bg-black/60 border border-border-focus">
+                                                      <div>
+                                                        <label className="text-[10px] font-mono text-foreground-muted block mb-1">
+                                                          Question Text
+                                                        </label>
+                                                        <input
+                                                          type="text"
+                                                          value={editQText}
+                                                          onChange={(e) => setEditQText(e.target.value)}
+                                                          className="w-full bg-surface border border-border-subtle px-2.5 py-1.5 text-xs text-foreground rounded-btn focus:outline-none"
+                                                          placeholder="Question text"
+                                                        />
+                                                      </div>
+
+                                                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                        <div className="sm:col-span-2">
+                                                          <label className="text-[10px] font-mono text-foreground-muted block mb-1">
+                                                            Unit
+                                                          </label>
+                                                          <select
+                                                            value={editUnitId}
+                                                            onChange={(e) => setEditUnitId(e.target.value)}
+                                                            className="w-full bg-surface border border-border-subtle px-2.5 py-1.5 text-xs text-foreground rounded-btn focus:outline-none"
+                                                          >
+                                                            {subjectDetails.units.map((unitOpt) => (
+                                                              <option key={unitOpt.id} value={unitOpt.id}>
+                                                                Unit #{unitOpt.number}: {unitOpt.title}
+                                                              </option>
+                                                            ))}
+                                                          </select>
+                                                        </div>
+                                                        <div>
+                                                          <label className="text-[10px] font-mono text-foreground-muted block mb-1">
+                                                            Marks
+                                                          </label>
+                                                          <input
+                                                            type="number"
+                                                            value={editMarks || ""}
+                                                            onChange={(e) =>
+                                                              setEditMarks(
+                                                                e.target.value ? parseInt(e.target.value, 10) : undefined
+                                                              )
+                                                            }
+                                                            className="w-full bg-surface border border-border-subtle px-2.5 py-1.5 text-xs text-foreground rounded-btn focus:outline-none"
+                                                            placeholder="Marks"
+                                                          />
+                                                        </div>
+                                                      </div>
+
+                                                      <AnswerWithDiagramEditor
+                                                        value={editAnsText}
+                                                        onChange={setEditAnsText}
+                                                        label="Answer (Markdown & Diagram URLs)"
+                                                        placeholder="Answer text... Click '+ Add Diagram URL' to insert diagrams."
+                                                        rows={4}
+                                                      />
+
+                                                      <div className="flex items-center justify-end gap-2 pt-1 border-t border-border-subtle">
+                                                        <button
+                                                          type="button"
+                                                          onClick={() => setEditingQuestionId(null)}
+                                                          className="px-3 py-1.5 text-xs text-foreground-muted hover:text-foreground"
+                                                        >
+                                                          Cancel
+                                                        </button>
+                                                        <button
+                                                          type="button"
+                                                          onClick={() => handleSaveQuestionEdit(sub.id, q.id)}
+                                                          className="px-4 py-1.5 rounded-btn bg-white text-black text-xs font-bold hover:bg-neutral-200 transition-colors"
+                                                        >
+                                                          Save Changes
+                                                        </button>
+                                                      </div>
+                                                    </div>
+                                                  ) : (
+                                                    <div className="flex items-start justify-between gap-3">
+                                                      <div className="space-y-1.5 flex-1 min-w-0">
+                                                        <div className="flex flex-wrap items-center gap-1.5">
+                                                          {q.marks && (
+                                                            <span className="font-mono text-[10px] text-foreground-muted px-1.5 py-0.5 rounded bg-white/5 border border-border-subtle">
+                                                              {q.marks} Marks
+                                                            </span>
+                                                          )}
+                                                          {q.years && (
+                                                            <span className="font-mono text-[10px] text-foreground-muted px-1.5 py-0.5 rounded bg-white/5 border border-border-subtle">
+                                                              {Array.isArray(q.years) ? q.years.join(", ") : q.years}
+                                                            </span>
+                                                          )}
+                                                          {/!\[.*?\]\(.*?\)/.test(q.answer) && (
+                                                            <span className="inline-flex items-center gap-1 font-mono text-[10px] px-1.5 py-0.5 rounded bg-accent-blue/15 border border-accent-blue/30 text-accent-blue">
+                                                              <ImageIcon className="h-2.5 w-2.5" />
+                                                              Diagram
+                                                            </span>
+                                                          )}
+                                                        </div>
+                                                        <p className="font-semibold text-foreground text-xs sm:text-sm">
+                                                          {q.question}
+                                                        </p>
+                                                        {q.answer && (
+                                                          <p className="text-foreground-muted line-clamp-2 font-mono text-[11px]">
+                                                            {q.answer}
+                                                          </p>
+                                                        )}
+                                                      </div>
+                                                      <div className="flex items-center gap-1 shrink-0 pt-0.5">
+                                                        <button
+                                                          type="button"
+                                                          onClick={() => {
+                                                            setEditingQuestionId(q.id);
+                                                            setEditQText(q.question);
+                                                            setEditAnsText(q.answer);
+                                                            setEditMarks(q.marks);
+                                                            setEditUnitId(q.unitId);
+                                                          }}
+                                                          className="p-1.5 text-foreground-muted hover:text-foreground rounded"
+                                                          title="Edit question"
+                                                        >
+                                                          <Edit2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                        <button
+                                                          type="button"
+                                                          onClick={() => handleDeleteQuestion(sub.id, q.id)}
+                                                          className="p-1.5 text-foreground-muted hover:text-red-400 rounded"
+                                                          title="Delete question"
+                                                        >
+                                                          <Trash2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                      </div>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              );
+                                            })
+                                          )}
                                         </div>
                                       )}
                                     </div>
                                   );
                                 })}
+
+                                {/* Unassigned questions if any exist */}
+                                {(() => {
+                                  const unassignedQuestions = subjectDetails.questions.filter(
+                                    (q) => !subjectDetails.units.some((u) => u.id === q.unitId)
+                                  );
+                                  if (unassignedQuestions.length === 0) return null;
+
+                                  const isUnassignedCollapsed = Boolean(collapsedUnits["unassigned"]);
+
+                                  return (
+                                    <div className="rounded-card border border-border-subtle bg-surface overflow-hidden">
+                                      <div className="flex items-center justify-between p-3 sm:p-3.5 bg-white/[0.02] border-b border-border-subtle">
+                                        <button
+                                          type="button"
+                                          onClick={() => toggleUnitCollapse("unassigned")}
+                                          className="flex items-center gap-2.5 text-left flex-1 min-w-0"
+                                        >
+                                          {isUnassignedCollapsed ? (
+                                            <ChevronRight className="h-4 w-4 text-foreground-muted shrink-0" />
+                                          ) : (
+                                            <ChevronDown className="h-4 w-4 text-foreground-muted shrink-0" />
+                                          )}
+                                          <span className="font-mono text-xs font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20">
+                                            General
+                                          </span>
+                                          <span className="text-xs sm:text-sm font-semibold text-foreground truncate">
+                                            Unsorted Questions
+                                          </span>
+                                          <span className="text-[10px] font-mono text-foreground-muted ml-1 shrink-0">
+                                            ({unassignedQuestions.length})
+                                          </span>
+                                        </button>
+                                      </div>
+
+                                      {!isUnassignedCollapsed && (
+                                        <div className="divide-y divide-border-subtle">
+                                          {unassignedQuestions.map((q) => {
+                                            const isEditing = editingQuestionId === q.id;
+
+                                            return (
+                                              <div
+                                                key={q.id}
+                                                className="p-3 sm:p-3.5 text-xs space-y-2 hover:bg-white/[0.01] transition-colors"
+                                              >
+                                                {isEditing ? (
+                                                  <div className="space-y-3 p-3.5 rounded-card bg-black/60 border border-border-focus">
+                                                    <div>
+                                                      <label className="text-[10px] font-mono text-foreground-muted block mb-1">
+                                                        Question Text
+                                                      </label>
+                                                      <input
+                                                        type="text"
+                                                        value={editQText}
+                                                        onChange={(e) => setEditQText(e.target.value)}
+                                                        className="w-full bg-surface border border-border-subtle px-2.5 py-1.5 text-xs text-foreground rounded-btn focus:outline-none"
+                                                      />
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                      <div className="sm:col-span-2">
+                                                        <label className="text-[10px] font-mono text-foreground-muted block mb-1">
+                                                          Assign to Unit
+                                                        </label>
+                                                        <select
+                                                          value={editUnitId}
+                                                          onChange={(e) => setEditUnitId(e.target.value)}
+                                                          className="w-full bg-surface border border-border-subtle px-2.5 py-1.5 text-xs text-foreground rounded-btn focus:outline-none"
+                                                        >
+                                                          <option value="">-- Select Unit --</option>
+                                                          {subjectDetails.units.map((unitOpt) => (
+                                                            <option key={unitOpt.id} value={unitOpt.id}>
+                                                              Unit #{unitOpt.number}: {unitOpt.title}
+                                                            </option>
+                                                          ))}
+                                                        </select>
+                                                      </div>
+                                                      <div>
+                                                        <label className="text-[10px] font-mono text-foreground-muted block mb-1">
+                                                          Marks
+                                                        </label>
+                                                        <input
+                                                          type="number"
+                                                          value={editMarks || ""}
+                                                          onChange={(e) =>
+                                                            setEditMarks(
+                                                              e.target.value ? parseInt(e.target.value, 10) : undefined
+                                                            )
+                                                          }
+                                                          className="w-full bg-surface border border-border-subtle px-2.5 py-1.5 text-xs text-foreground rounded-btn focus:outline-none"
+                                                        />
+                                                      </div>
+                                                    </div>
+
+                                                    <AnswerWithDiagramEditor
+                                                      value={editAnsText}
+                                                      onChange={setEditAnsText}
+                                                      label="Answer (Markdown & Diagram URLs)"
+                                                      rows={4}
+                                                    />
+
+                                                    <div className="flex items-center justify-end gap-2 pt-1 border-t border-border-subtle">
+                                                      <button
+                                                        type="button"
+                                                        onClick={() => setEditingQuestionId(null)}
+                                                        className="px-3 py-1.5 text-xs text-foreground-muted hover:text-foreground"
+                                                      >
+                                                        Cancel
+                                                      </button>
+                                                      <button
+                                                        type="button"
+                                                        onClick={() => handleSaveQuestionEdit(sub.id, q.id)}
+                                                        className="px-4 py-1.5 rounded-btn bg-white text-black text-xs font-bold hover:bg-neutral-200 transition-colors"
+                                                      >
+                                                        Save Changes
+                                                      </button>
+                                                    </div>
+                                                  </div>
+                                                ) : (
+                                                  <div className="flex items-start justify-between gap-3">
+                                                    <div className="space-y-1.5 flex-1 min-w-0">
+                                                      <p className="font-semibold text-foreground text-xs sm:text-sm">
+                                                        {q.question}
+                                                      </p>
+                                                      {q.answer && (
+                                                        <p className="text-foreground-muted line-clamp-2 font-mono text-[11px]">
+                                                          {q.answer}
+                                                        </p>
+                                                      )}
+                                                    </div>
+                                                    <div className="flex items-center gap-1 shrink-0 pt-0.5">
+                                                      <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                          setEditingQuestionId(q.id);
+                                                          setEditQText(q.question);
+                                                          setEditAnsText(q.answer);
+                                                          setEditMarks(q.marks);
+                                                          setEditUnitId(q.unitId);
+                                                        }}
+                                                        className="p-1.5 text-foreground-muted hover:text-foreground rounded"
+                                                        title="Edit question"
+                                                      >
+                                                        <Edit2 className="h-3.5 w-3.5" />
+                                                      </button>
+                                                      <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteQuestion(sub.id, q.id)}
+                                                        className="p-1.5 text-foreground-muted hover:text-red-400 rounded"
+                                                        title="Delete question"
+                                                      >
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                      </button>
+                                                    </div>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             )}
                           </div>
