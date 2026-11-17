@@ -16,8 +16,10 @@ import {
   Check,
   FileText,
   Loader2,
+  Image as ImageIcon,
 } from "lucide-react";
 import { useDialog } from "@/components/ui/DialogProvider";
+import AnswerWithDiagramEditor from "@/components/admin/AnswerWithDiagramEditor";
 
 interface ImportPreviewProps {
   groups: ParsedUnitGroup[];
@@ -212,16 +214,13 @@ export default function ImportPreview({
                               />
                             </div>
                             <div>
-                              <label className="text-[11px] font-mono text-foreground-muted block mb-1">
-                                Answer (Markdown):
-                              </label>
-                              <textarea
-                                rows={4}
+                              <AnswerWithDiagramEditor
                                 value={editingQuestion.answer}
-                                onChange={(e) =>
-                                  setEditingQuestion({ ...editingQuestion, answer: e.target.value })
+                                onChange={(newAns) =>
+                                  setEditingQuestion({ ...editingQuestion, answer: newAns })
                                 }
-                                className="w-full rounded-btn border border-border-subtle bg-surface px-3 py-1.5 text-xs font-mono text-foreground focus:outline-none focus:border-border-focus"
+                                label="Answer (Markdown & Diagrams)"
+                                rows={4}
                               />
                             </div>
                             <div className="grid grid-cols-3 gap-2">
@@ -306,6 +305,12 @@ export default function ImportPreview({
                                   <span className="inline-flex items-center gap-1 font-mono text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-border-subtle text-foreground-secondary">
                                     <Clock className="h-3 w-3" />
                                     {q.years.join(", ")}
+                                  </span>
+                                )}
+                                {/!\[.*?\]\(.*?\)/.test(q.answer) && (
+                                  <span className="inline-flex items-center gap-1 font-mono text-[10px] px-1.5 py-0.5 rounded bg-accent-blue/15 border border-accent-blue/30 text-accent-blue">
+                                    <ImageIcon className="h-3 w-3" />
+                                    Diagram
                                   </span>
                                 )}
                               </div>

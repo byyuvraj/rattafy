@@ -23,7 +23,9 @@ import {
   Edit3,
   Check,
   X,
+  Image as ImageIcon,
 } from "lucide-react";
+import AnswerWithDiagramEditor from "@/components/admin/AnswerWithDiagramEditor";
 
 export default function AdminPage() {
   const { confirm, alert } = useDialog();
@@ -59,6 +61,15 @@ export default function AdminPage() {
   const [editQText, setEditQText] = useState("");
   const [editAnsText, setEditAnsText] = useState("");
   const [editMarks, setEditMarks] = useState<number | undefined>(undefined);
+
+  // Add Question state
+  const [isAddingQuestion, setIsAddingQuestion] = useState(false);
+  const [newQUnitId, setNewQUnitId] = useState("");
+  const [newQText, setNewQText] = useState("");
+  const [newQAns, setNewQAns] = useState("");
+  const [newQMarks, setNewQMarks] = useState<number | undefined>(undefined);
+  const [newQYears, setNewQYears] = useState("");
+  const [isSavingNewQ, setIsSavingNewQ] = useState(false);
 
   // Check auth on mount
   useEffect(() => {
@@ -257,6 +268,37 @@ export default function AdminPage() {
       setEditingQuestionId(null);
       loadSubjectDetails(subjectId);
     } catch {}
+  };
+
+  const handleCreateQuestion = async (subjectId: string) => {
+    if (!newQText.trim()) return;
+    setIsSavingNewQ(true);
+    try {
+      const res = await fetch("/api/questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subjectId,
+          unitId: newQUnitId || undefined,
+          question: newQText,
+          answer: newQAns,
+          marks: newQMarks,
+          years: newQYears ? newQYears.split(",").map((y) => y.trim()).filter(Boolean) : [],
+        }),
+      });
+      if (res.ok) {
+        setIsAddingQuestion(false);
+        setNewQText("");
+        setNewQAns("");
+        setNewQMarks(undefined);
+        setNewQYears("");
+        loadSubjectDetails(subjectId);
+        loadSubjects();
+      }
+    } catch {
+    } finally {
+      setIsSavingNewQ(false);
+    }
   };
 
   // 1. Initial Loading Screen
@@ -613,13 +655,142 @@ export default function AdminPage() {
 
                           {/* Questions Management */}
                           <div className="space-y-3">
-                            <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-foreground-secondary">
-                              Questions ({subjectDetails.questions.length})
-                            </h4>
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-foreground-secondary">
+                                Questions ({subjectDetails.questions.length})
+                              </h4>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsAddingQuestion(!isAddingQuestion);
+                                  if (!newQUnitId && subjectDetails.units.length > 0) {
+                                    setNewQUnitId(subjectDetails.units[0].id);
+                                  }
+                                }}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-btn bg-white/10 hover:bg-white/15 text-xs text-foreground font-medium transition-colors"
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                                <span>{isAddingQuestion ? "Cancel" : "Add Question"}</span>
+                              </button>
+                            </div>
+
+                            {/* Add Question Card */}
+                            {isAddingQuestion && (
+                              <div className="p-3 sm:p-4 rounded-card bg-black/60 border border-border-focus space-y-3">
+                                <div className="flex items-center justify-between border-b border-border-subtle pb-2">
+                                  <span className="text-xs font-semibold text-foreground">Create New Question</span>
+                                  <span className="text-[10px] font-mono text-foreground-muted">Subject: {sub.name}</span>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                  <div className="sm:col-span-2">
+                                    <label className="text-[10px] font-mono text-foreground-muted block mb-1">
+                                      Target Unit
+                                    </label>
+                                    <select
+                                      value={newQUnitId}
+                                      onChange={(e) => setNewQUnitId(e.target.value)}
+                                      className="w-full bg-surface border border-border-subtle px-2.5 py-1.5 text-xs text-foreground rounded-btn focus:outline-none"
+                                    >
+                                      {subjectDetails.units.map((u) => (
+                                        <option key={u.id} value={u.id}>
+                                          Unit #{u.number}: {u.title}
+                                        </option>
+                                      ))}
+                                      {subjectDetails.units.length === 0 && (
+                                        <option value="">Unit 1 (Auto-created)</option>
+                                      )}
+                                    </select>
+                                  </div>
+
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                      <label className="text-[10px] font-mono text-foreground-muted block mb-1">
+                                        Marks
+                                      </label>
+                                      <input
+                                        type="number"
+                                        placeholder="e.g. 5"
+                                        value={newQMarks || ""}
+                                        onChange={(e) =>
+                                          setNewQMarks(e.target.value ? parseInt(e.target.value, 10) : undefined)
+                                        }
+                                        className="w-full bg-surface border border-border-subtle px-2.5 py-1.5 text-xs text-foreground rounded-btn focus:outline-none"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-[10px] font-mono text-foreground-muted block mb-1">
+                                        Years
+                                      </label>
+                                      <input
+                                        type="text"
+                                        placeholder="2023, 2024"
+                                        value={newQYears}
+                                        onChange={(e) => setNewQYears(e.target.value)}
+                                        className="w-full bg-surface border border-border-subtle px-2.5 py-1.5 text-xs text-foreground rounded-btn focus:outline-none"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label className="text-[10px] font-mono text-foreground-muted block mb-1">
+                                    Question Text *
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={newQText}
+                                    onChange={(e) => setNewQText(e.target.value)}
+                                    className="w-full bg-surface border border-border-subtle px-2.5 py-1.5 text-xs text-foreground rounded-btn focus:outline-none"
+                                    placeholder="e.g. Explain 8086 microprocessor architecture with a neat block diagram."
+                                  />
+                                </div>
+
+                                <AnswerWithDiagramEditor
+                                  value={newQAns}
+                                  onChange={setNewQAns}
+                                  label="Answer Content (Markdown & Diagram URLs)"
+                                  placeholder="Type answer explanation here. Click '+ Add Diagram URL' above to attach diagrams and preview them live..."
+                                  rows={4}
+                                />
+
+                                <div className="flex items-center justify-end gap-2 pt-2 border-t border-border-subtle">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setIsAddingQuestion(false);
+                                      setNewQText("");
+                                      setNewQAns("");
+                                    }}
+                                    className="px-3 py-1.5 text-xs text-foreground-muted hover:text-foreground"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={!newQText.trim() || isSavingNewQ}
+                                    onClick={() => handleCreateQuestion(sub.id)}
+                                    className="px-4 py-1.5 rounded-btn bg-white text-black text-xs font-bold hover:bg-neutral-200 disabled:opacity-40 transition-colors flex items-center gap-1.5"
+                                  >
+                                    {isSavingNewQ ? (
+                                      <>
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                        <span>Saving...</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Plus className="h-3.5 w-3.5" />
+                                        <span>Save Question</span>
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
 
                             {subjectDetails.questions.length === 0 ? (
                               <p className="text-xs text-foreground-muted italic py-2">
-                                No questions uploaded yet. Click &quot;Import Papers&quot; to paste questions or upload a past paper file.
+                                No questions uploaded yet. Click &quot;Add Question&quot; above or &quot;Import Papers&quot; to import questions from file/text.
                               </p>
                             ) : (
                               <div className="divide-y divide-border-subtle max-h-96 overflow-y-auto rounded-card border border-border-subtle bg-surface">
@@ -629,62 +800,85 @@ export default function AdminPage() {
                                   return (
                                     <div key={q.id} className="p-3 text-xs space-y-2">
                                       {isEditing ? (
-                                        <div className="space-y-2 p-2 rounded bg-black/60 border border-border-focus">
-                                          <input
-                                            type="text"
-                                            value={editQText}
-                                            onChange={(e) => setEditQText(e.target.value)}
-                                            className="w-full bg-surface border border-border-subtle px-2 py-1 text-xs text-foreground rounded"
-                                            placeholder="Question text"
-                                          />
-                                          <textarea
-                                            rows={3}
-                                            value={editAnsText}
-                                            onChange={(e) => setEditAnsText(e.target.value)}
-                                            className="w-full bg-surface border border-border-subtle px-2 py-1 text-xs font-mono text-foreground rounded"
-                                            placeholder="Answer text"
-                                          />
-                                          <div className="flex items-center justify-between">
+                                        <div className="space-y-3 p-3 rounded-card bg-black/60 border border-border-focus">
+                                          <div>
+                                            <label className="text-[10px] font-mono text-foreground-muted block mb-1">
+                                              Question Text
+                                            </label>
                                             <input
-                                              type="number"
-                                              value={editMarks || ""}
-                                              onChange={(e) =>
-                                                setEditMarks(
-                                                  e.target.value ? parseInt(e.target.value, 10) : undefined
-                                                )
-                                              }
-                                              className="w-24 bg-surface border border-border-subtle px-2 py-1 text-xs text-foreground rounded"
-                                              placeholder="Marks"
+                                              type="text"
+                                              value={editQText}
+                                              onChange={(e) => setEditQText(e.target.value)}
+                                              className="w-full bg-surface border border-border-subtle px-2.5 py-1.5 text-xs text-foreground rounded-btn focus:outline-none"
+                                              placeholder="Question text"
                                             />
+                                          </div>
+
+                                          <AnswerWithDiagramEditor
+                                            value={editAnsText}
+                                            onChange={setEditAnsText}
+                                            label="Answer (Markdown & Diagram URLs)"
+                                            placeholder="Answer text... Click 'Add Diagram URL' to insert diagrams."
+                                            rows={4}
+                                          />
+
+                                          <div className="flex items-center justify-between pt-1">
+                                            <div className="flex items-center gap-2">
+                                              <label className="text-[10px] font-mono text-foreground-muted">Marks:</label>
+                                              <input
+                                                type="number"
+                                                value={editMarks || ""}
+                                                onChange={(e) =>
+                                                  setEditMarks(
+                                                    e.target.value ? parseInt(e.target.value, 10) : undefined
+                                                  )
+                                                }
+                                                className="w-20 bg-surface border border-border-subtle px-2 py-1 text-xs text-foreground rounded-btn focus:outline-none"
+                                                placeholder="Marks"
+                                              />
+                                            </div>
                                             <div className="flex items-center gap-2">
                                               <button
                                                 type="button"
                                                 onClick={() => setEditingQuestionId(null)}
-                                                className="px-2 py-1 text-xs text-foreground-muted hover:text-foreground"
+                                                className="px-3 py-1.5 text-xs text-foreground-muted hover:text-foreground"
                                               >
                                                 Cancel
                                               </button>
                                               <button
                                                 type="button"
                                                 onClick={() => handleSaveQuestionEdit(sub.id, q.id)}
-                                                className="px-3 py-1 rounded bg-white text-black text-xs font-bold"
+                                                className="px-4 py-1.5 rounded-btn bg-white text-black text-xs font-bold hover:bg-neutral-200 transition-colors"
                                               >
-                                                Save
+                                                Save Changes
                                               </button>
                                             </div>
                                           </div>
                                         </div>
                                       ) : (
                                         <div className="flex items-start justify-between gap-3">
-                                          <div className="space-y-1 flex-1 min-w-0">
-                                            <p className="font-semibold text-foreground">{q.question}</p>
+                                          <div className="space-y-1.5 flex-1 min-w-0">
+                                            <div className="flex flex-wrap items-center gap-1.5">
+                                              {q.marks && (
+                                                <span className="font-mono text-[10px] text-foreground-muted px-1.5 py-0.5 rounded bg-white/5 border border-border-subtle">
+                                                  {q.marks} Marks
+                                                </span>
+                                              )}
+                                              {/!\[.*?\]\(.*?\)/.test(q.answer) && (
+                                                <span className="inline-flex items-center gap-1 font-mono text-[10px] px-1.5 py-0.5 rounded bg-accent-blue/15 border border-accent-blue/30 text-accent-blue">
+                                                  <ImageIcon className="h-2.5 w-2.5" />
+                                                  Diagram
+                                                </span>
+                                              )}
+                                            </div>
+                                            <p className="font-semibold text-foreground text-xs">{q.question}</p>
                                             {q.answer && (
-                                              <p className="text-foreground-muted line-clamp-1 font-mono">
+                                              <p className="text-foreground-muted line-clamp-2 font-mono text-[11px]">
                                                 {q.answer}
                                               </p>
                                             )}
                                           </div>
-                                          <div className="flex items-center gap-1 shrink-0">
+                                          <div className="flex items-center gap-1 shrink-0 pt-0.5">
                                             <button
                                               type="button"
                                               onClick={() => {
@@ -693,7 +887,7 @@ export default function AdminPage() {
                                                 setEditAnsText(q.answer);
                                                 setEditMarks(q.marks);
                                               }}
-                                              className="p-1.5 text-foreground-muted hover:text-foreground"
+                                              className="p-1.5 text-foreground-muted hover:text-foreground rounded"
                                               title="Edit question"
                                             >
                                               <Edit2 className="h-3.5 w-3.5" />
@@ -701,7 +895,7 @@ export default function AdminPage() {
                                             <button
                                               type="button"
                                               onClick={() => handleDeleteQuestion(sub.id, q.id)}
-                                              className="p-1.5 text-foreground-muted hover:text-red-400"
+                                              className="p-1.5 text-foreground-muted hover:text-red-400 rounded"
                                               title="Delete question"
                                             >
                                               <Trash2 className="h-3.5 w-3.5" />
