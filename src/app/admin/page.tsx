@@ -513,9 +513,13 @@ export default function AdminPage() {
 
                       <button
                         type="button"
-                        onClick={() => setEditingSubject(sub)}
-                        className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-btn text-foreground-secondary hover:text-foreground hover:bg-white/5 transition-colors"
-                        title="Edit subject details"
+                        onClick={() => loadSubjectDetails(sub.id)}
+                        className={`p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-btn transition-colors ${
+                          isExpanded
+                            ? "bg-white/15 text-foreground"
+                            : "text-foreground-secondary hover:text-foreground hover:bg-white/5"
+                        }`}
+                        title={isExpanded ? "Collapse questions & units" : "Edit questions & units"}
                       >
                         <Edit3 className="h-4 w-4" />
                       </button>
