@@ -19,8 +19,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const { question, answer, unitId, marks, years, exams } = body;
 
     const dataToUpdate: any = {};
-    if (question !== undefined) dataToUpdate.question = question.trim();
-    if (answer !== undefined) dataToUpdate.answer = answer.trim();
+    if (question !== undefined) dataToUpdate.question = typeof question === "string" ? question.trim() : "";
+    if (answer !== undefined) dataToUpdate.answer = typeof answer === "string" ? answer.trim() : "";
     if (unitId !== undefined) dataToUpdate.unitId = unitId;
     if (marks !== undefined) dataToUpdate.marks = marks ? Number(marks) : null;
     if (years !== undefined) {

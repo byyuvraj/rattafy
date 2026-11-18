@@ -52,10 +52,10 @@ export async function POST(req: NextRequest) {
       const created = await tx.subject.create({
         data: {
           name: name.trim(),
-          code: code?.trim() || null,
-          branch: branch?.trim() || null,
-          year: year?.trim() || null,
-          syllabus: syllabus.trim() || null,
+          code: typeof code === "string" && code.trim() ? code.trim() : null,
+          branch: typeof branch === "string" && branch.trim() ? branch.trim() : null,
+          year: typeof year === "string" && year.trim() ? year.trim() : null,
+          syllabus: typeof syllabus === "string" && syllabus.trim() ? syllabus.trim() : null,
         },
       });
 

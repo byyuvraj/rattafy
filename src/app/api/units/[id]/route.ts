@@ -21,7 +21,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const unit = await prisma.unit.update({
       where: { id: params.id },
       data: {
-        ...(title !== undefined ? { title: title.trim() } : {}),
+        ...(title !== undefined ? { title: typeof title === "string" ? title.trim() : "" } : {}),
         ...(number !== undefined ? { number: Number(number) } : {}),
       },
     });

@@ -49,11 +49,11 @@ export default function EditSubjectModal({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: name.trim(),
-          code: code.trim() || null,
-          branch: branch.trim() || null,
-          year: year.trim() || null,
-          syllabus: syllabus.trim() || null,
+          name: (name || "").trim(),
+          code: (code || "").trim() || null,
+          branch: (branch || "").trim() || null,
+          year: (year || "").trim() || null,
+          syllabus: (syllabus || "").trim() || null,
         }),
       });
 

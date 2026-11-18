@@ -93,15 +93,30 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const body = await req.json();
     const { name, code, branch, year, syllabus } = body;
 
+    const dataToUpdate: any = {};
+    if (name !== undefined) {
+      if (typeof name === "string" && name.trim()) {
+        dataToUpdate.name = name.trim();
+      } else {
+        return NextResponse.json({ error: "Subject name cannot be empty" }, { status: 400 });
+      }
+    }
+    if (code !== undefined) {
+      dataToUpdate.code = typeof code === "string" && code.trim() ? code.trim() : null;
+    }
+    if (branch !== undefined) {
+      dataToUpdate.branch = typeof branch === "string" && branch.trim() ? branch.trim() : null;
+    }
+    if (year !== undefined) {
+      dataToUpdate.year = typeof year === "string" && year.trim() ? year.trim() : null;
+    }
+    if (syllabus !== undefined) {
+      dataToUpdate.syllabus = typeof syllabus === "string" && syllabus.trim() ? syllabus.trim() : null;
+    }
+
     const updated = await prisma.subject.update({
       where: { id: params.id },
-      data: {
-        ...(name !== undefined ? { name: name.trim() } : {}),
-        ...(code !== undefined ? { code: code.trim() || null } : {}),
-        ...(branch !== undefined ? { branch: branch.trim() || null } : {}),
-        ...(year !== undefined ? { year: year.trim() || null } : {}),
-        ...(syllabus !== undefined ? { syllabus: syllabus.trim() || null } : {}),
-      },
+      data: dataToUpdate,
     });
 
     return NextResponse.json(updated);
