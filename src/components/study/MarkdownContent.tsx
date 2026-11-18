@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 import {
   Check,
   Copy,
@@ -21,11 +24,46 @@ interface MarkdownContentProps {
   content: string;
 }
 
+/**
+ * Preprocesses text to handle all common chatbot LaTeX math representations:
+ * - \[ ... \] or \\[ ... \\] -> $$ ... $$ (display math)
+ * - \( ... \) or \\( ... \\) -> $ ... $ (inline math)
+ * - Trims accidental whitespace right inside single dollar signs
+ */
+export function preprocessLaTeX(content: string): string {
+  if (!content) return "";
+
+  let result = content;
+
+  // 1. Convert block math: \[ ... \] or \\[ ... \\] to $$ ... $$
+  result = result.replace(
+    /(?:\\{1,2}\[)([\s\S]*?)(?:\\{1,2}\])/g,
+    (_, math) => `\n\n$$\n${math.trim()}\n$$\n\n`
+  );
+
+  // 2. Convert inline math: \( ... \) or \\( ... \\) to $ ... $
+  result = result.replace(
+    /(?:\\{1,2}\()([\s\S]*?)(?:\\{1,2}\))/g,
+    (_, math) => `$${math.trim()}$`
+  );
+
+  // 3. Fix spaces right inside single dollars: $ formula $ -> $formula$
+  result = result.replace(
+    /(?<!\$)\$\s+([^$\n]+?)\s+\$(?!\$)/g,
+    (_, math) => `$${math.trim()}$`
+  );
+
+  return result;
+}
+
 export default function MarkdownContent({ content }: MarkdownContentProps) {
+  const processedContent = preprocessLaTeX(content);
+
   return (
     <div className="prose prose-invert max-w-none text-foreground leading-relaxed text-sm sm:text-base">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[[rehypeKatex, { throwOnError: false, strict: false }]]}
         components={{
           h1: ({ children }) => (
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground mt-4 mb-2">
@@ -85,7 +123,7 @@ export default function MarkdownContent({ content }: MarkdownContentProps) {
           },
         }}
       >
-        {content}
+        {processedContent}
       </ReactMarkdown>
     </div>
   );

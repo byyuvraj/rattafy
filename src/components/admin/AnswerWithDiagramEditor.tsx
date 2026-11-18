@@ -16,6 +16,7 @@ import {
   List,
   Code,
   Table,
+  Sigma,
 } from "lucide-react";
 import MarkdownContent from "@/components/study/MarkdownContent";
 
@@ -38,7 +39,7 @@ interface ParsedDiagram {
 export default function AnswerWithDiagramEditor({
   value,
   onChange,
-  placeholder = "Write answer in Markdown... You can add bullet points, code, and diagram images.",
+  placeholder = "Write answer in Markdown... Supports LaTeX formulas ($E=mc^2$ or $$block$$), bullet points, code, and diagrams.",
   rows = 5,
   label = "Answer (Markdown & Diagrams)",
   minHeight = "130px",
@@ -213,6 +214,14 @@ export default function AnswerWithDiagramEditor({
                 title="Table"
               >
                 <Table className="h-3 w-3" />
+              </button>
+              <button
+                type="button"
+                onClick={() => insertFormatting("$", "$", "E = mc^2")}
+                className="p-1 rounded text-foreground-muted hover:text-foreground hover:bg-white/5 transition-colors"
+                title="Math Formula ($x$ or $$E=mc^2$$)"
+              >
+                <Sigma className="h-3 w-3" />
               </button>
             </div>
           )}

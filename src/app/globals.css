@@ -101,6 +101,21 @@ html.lenis, html.lenis body {
   background-image: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.04), transparent 60%);
 }
 
+/* KaTeX math formulas styling */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+  margin: 0.75rem 0 !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.katex {
+  font-size: 1.05em;
+  text-rendering: auto;
+  color: #f3f4f6;
+}
+
 /* Touch friendly button helpers */
 @layer utilities {
   .touch-target {
