@@ -16,7 +16,9 @@ import {
   List,
   Loader2,
   BookOpen,
+  FileDown,
 } from "lucide-react";
+import ExportSubjectModal from "@/components/modals/ExportSubjectModal";
 
 export default function SubjectPage() {
   const params = useParams();
@@ -32,6 +34,7 @@ export default function SubjectPage() {
   const [isStudyAllOpen, setIsStudyAllOpen] = useState(false);
   const [activeOverviewUnit, setActiveOverviewUnit] = useState<Unit | null>(null);
   const [isOverviewAllOpen, setIsOverviewAllOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -212,6 +215,17 @@ export default function SubjectPage() {
                   <List className="h-3.5 w-3.5" />
                   Browse Questions
                 </button>
+
+                <button
+                  type="button"
+                  disabled={totalQuestions === 0}
+                  onClick={() => setIsExportOpen(true)}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 text-xs font-semibold text-foreground transition-all disabled:opacity-40"
+                  title="Extract all questions as structured Markdown (.md)"
+                >
+                  <FileDown className="h-3.5 w-3.5 text-accent-blue" />
+                  <span>Extract .md</span>
+                </button>
               </div>
             </div>
 
@@ -291,6 +305,17 @@ export default function SubjectPage() {
             )}
           </div>
         </>
+      )}
+
+      {/* Extract / Export Modal */}
+      {subject && isExportOpen && (
+        <ExportSubjectModal
+          isOpen={isExportOpen}
+          onClose={() => setIsExportOpen(false)}
+          subject={subject}
+          units={units}
+          questions={questions}
+        />
       )}
     </div>
   );

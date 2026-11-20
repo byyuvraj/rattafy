@@ -15,13 +15,16 @@ import {
   X,
   FileText,
   RotateCcw,
+  FileDown,
 } from "lucide-react";
 import MarkdownContent from "../study/MarkdownContent";
 import { useDialog } from "@/components/ui/DialogProvider";
+import ExportSubjectModal from "@/components/modals/ExportSubjectModal";
 
 interface OverviewModeProps {
   subject: Subject;
   unit?: Unit;
+  units?: Unit[];
   questions: Question[];
   onClose: () => void;
   onQuestionsUpdated?: () => void;
@@ -30,6 +33,7 @@ interface OverviewModeProps {
 export default function OverviewMode({
   subject,
   unit,
+  units = [],
   questions,
   onClose,
   onQuestionsUpdated,
@@ -38,6 +42,9 @@ export default function OverviewMode({
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [expandedQuestions, setExpandedQuestions] = useState<Record<string, boolean>>({});
+  const [isExportOpen, setIsExportOpen] = useState(false);
+
+  const effectiveUnits = units.length > 0 ? units : (unit ? [unit] : []);
 
   const toggleExpand = (id: string) => {
     setExpandedQuestions((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -108,13 +115,24 @@ export default function OverviewMode({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="self-stretch sm:self-auto px-4 py-2 min-h-[44px] flex items-center justify-center rounded-btn bg-white/5 border border-border-subtle text-xs font-semibold text-foreground hover:bg-white/10 active:scale-[0.98] transition-all"
-        >
-          Exit Overview
-        </button>
+        <div className="flex items-center gap-2 self-stretch sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setIsExportOpen(true)}
+            className="px-3.5 py-2 min-h-[44px] flex items-center justify-center gap-1.5 rounded-btn bg-white/5 border border-border-subtle text-xs font-semibold text-foreground hover:bg-white/10 active:scale-[0.98] transition-all"
+            title="Extract questions as Markdown (.md)"
+          >
+            <FileDown className="h-3.5 w-3.5 text-accent-blue" />
+            <span>Extract .md</span>
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 min-h-[44px] flex items-center justify-center rounded-btn bg-white/5 border border-border-subtle text-xs font-semibold text-foreground hover:bg-white/10 active:scale-[0.98] transition-all"
+          >
+            Exit Overview
+          </button>
+        </div>
       </div>
 
       {/* Search and Filters Bar */}
@@ -294,6 +312,16 @@ export default function OverviewMode({
           })
         )}
       </div>
+
+      {isExportOpen && (
+        <ExportSubjectModal
+          isOpen={isExportOpen}
+          onClose={() => setIsExportOpen(false)}
+          subject={subject}
+          units={effectiveUnits}
+          questions={filteredQuestions}
+        />
+      )}
     </div>
   );
 }

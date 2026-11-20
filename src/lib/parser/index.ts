@@ -48,13 +48,15 @@ export function parseUnitHeader(line: string): { unitNumber: number; unitTitle: 
 }
 
 // Check if a line is a Question start
-// Matches: "Q", "Q1", "Q.1", "Q1.", "Q1)", "Q:", "Q 1:", "Question 1:"
+// Matches: "Q", "Q1", "Q.1", "Q1.", "Q1)", "Q:", "Q 1:", "Question 1:", "### Q1:"
 export function parseQuestionHeader(line: string): { isQuestion: boolean; questionText: string } {
   const trimmed = line.trim();
+  // Strip leading markdown headers like #, ##, ###
+  const stripped = trimmed.replace(/^#+\s*/, "");
 
   // Pattern covering: Q, Q1, Q.1, Q1., Q1), Q:, Q 1., Question 1:, etc.
   const qRegex = /^(?:Question|Q)(?:\s*\.?\s*\d+[.:)]?|\s*[:.)]|\s+)\s*(.*)$/i;
-  const match = trimmed.match(qRegex);
+  const match = stripped.match(qRegex);
 
   if (match) {
     return {
@@ -65,7 +67,7 @@ export function parseQuestionHeader(line: string): { isQuestion: boolean; questi
 
   // Also standalone "Q" or "Q1" with colon or dot
   const standaloneQ = /^(?:Question|Q)\s*\d*\s*$/i;
-  if (standaloneQ.test(trimmed)) {
+  if (standaloneQ.test(stripped)) {
     return {
       isQuestion: true,
       questionText: "",
@@ -228,8 +230,8 @@ export function parsePastPaperText(rawText: string): ParseResult {
     const line = lines[i];
     const trimmed = line.trim();
 
-    // 1. Check for standalone terminator ``` which ends an answer
-    if (inAnswerBlock && trimmed === "```") {
+    // 1. Check for standalone terminator ``` or horizontal rule --- which ends an answer
+    if (inAnswerBlock && (trimmed === "```" || trimmed === "---" || trimmed === "***")) {
       commitCurrentQuestion();
       continue;
     }

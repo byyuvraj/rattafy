@@ -24,8 +24,10 @@ import {
   Check,
   X,
   Image as ImageIcon,
+  FileDown,
 } from "lucide-react";
 import AnswerWithDiagramEditor from "@/components/admin/AnswerWithDiagramEditor";
+import ExportSubjectModal from "@/components/modals/ExportSubjectModal";
 
 export default function AdminPage() {
   const { confirm, alert } = useDialog();
@@ -42,6 +44,11 @@ export default function AdminPage() {
   const [activeSubjectForImport, setActiveSubjectForImport] = useState<{
     subject: Subject;
     units: Unit[];
+  } | null>(null);
+  const [activeSubjectForExport, setActiveSubjectForExport] = useState<{
+    subject: Subject;
+    units: Unit[];
+    questions: Question[];
   } | null>(null);
   const [isAddSubjectOpen, setIsAddSubjectOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
@@ -213,6 +220,24 @@ export default function AdminPage() {
       setActiveSubjectForImport({
         subject: sub,
         units: [],
+      });
+    }
+  };
+
+  const handleOpenExport = async (sub: Subject) => {
+    try {
+      const res = await fetch(`/api/subjects/${sub.id}`);
+      const data = await res.json();
+      setActiveSubjectForExport({
+        subject: data.subject || sub,
+        units: data.units || [],
+        questions: data.questions || [],
+      });
+    } catch {
+      setActiveSubjectForExport({
+        subject: sub,
+        units: [],
+        questions: [],
       });
     }
   };
@@ -523,6 +548,16 @@ export default function AdminPage() {
 
                       <button
                         type="button"
+                        onClick={() => handleOpenExport(sub)}
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[40px] rounded-btn bg-white/5 border border-border-subtle hover:bg-white/10 text-foreground text-xs font-medium transition-all"
+                        title="Extract entire subject questions in structured .md"
+                      >
+                        <FileDown className="h-3.5 w-3.5 text-accent-blue" />
+                        <span className="hidden sm:inline">Extract .md</span>
+                      </button>
+
+                      <button
+                        type="button"
                         onClick={() => loadSubjectDetails(sub.id)}
                         className={`p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-btn transition-colors ${
                           isExpanded
@@ -603,6 +638,22 @@ export default function AdminPage() {
                               </div>
 
                               <div className="flex items-center gap-2 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveSubjectForExport({
+                                      subject: sub,
+                                      units: subjectDetails.units,
+                                      questions: subjectDetails.questions,
+                                    });
+                                  }}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-btn bg-white/5 hover:bg-white/10 text-xs text-foreground font-medium border border-border-subtle transition-colors"
+                                  title="Extract questions as structured .md"
+                                >
+                                  <FileDown className="h-3.5 w-3.5 text-accent-blue" />
+                                  <span>Extract .md</span>
+                                </button>
+
                                 {!isAddingUnit && (
                                   <button
                                     type="button"
@@ -1241,6 +1292,17 @@ export default function AdminPage() {
               loadSubjectDetails(activeSubjectForImport.subject.id);
             }
           }}
+        />
+      )}
+
+      {/* Export Modal */}
+      {activeSubjectForExport && (
+        <ExportSubjectModal
+          isOpen={Boolean(activeSubjectForExport)}
+          onClose={() => setActiveSubjectForExport(null)}
+          subject={activeSubjectForExport.subject}
+          units={activeSubjectForExport.units}
+          questions={activeSubjectForExport.questions}
         />
       )}
     </div>
